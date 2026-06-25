@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jambar, Team Building for Fun (Prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+<style>
+  :root{
+    /* Brand placeholders, easy to swap to real Jambar colours */
+    --ink:#1f2937; --ink-soft:#4b5563; --line:#e5e7eb; --bg:#f6f7f9; --card:#ffffff;
+    --primary:#2563eb; --primary-dark:#1d4ed8; --primary-soft:#eaf1fe;
+    --buy:#16a34a; --buy-soft:#e9f9ef;
+    --quote:#0d9488; --quote-soft:#e6f7f4;
+    --grow:#15803d; --grow-soft:#e7f6ec;
+    --nurture:#64748b; --nurture-soft:#f1f5f9;
+    --flag:#b45309; --flag-soft:#fef3c7;
+    --radius:14px; --shadow:0 1px 3px rgba(0,0,0,.06),0 8px 24px rgba(0,0,0,.06);
+    --font-head:'Bricolage Grotesque',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  h1,.ttl,.outcome h1,.modal-cont h2,.price .amt,.count .n,.step-k{font-family:var(--font-head)}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;font-size:16.5px}
+  .wrap{max-width:1280px;margin:0 auto;padding:30px 24px 110px}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 2px 18px}
+  .logo{font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .logo span{color:var(--buy)}
+  .tag{font-size:12px;color:var(--ink-soft);background:#fff;border:1px solid var(--line);padding:4px 10px;border-radius:999px}
+
+  /* site nav (replica of jambar.biz header) */
+  .sitenav{background:#fff;border-bottom:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.05);position:sticky;top:0;z-index:60}
+  .sitenav .inner{max-width:1100px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:12px 22px}
+  .sitenav .brand img{height:52px;display:block}
+  .sitenav .links{display:flex;align-items:center;gap:24px}
+  .sitenav .links a{color:#1f2937;text-decoration:none;font-size:16px;font-weight:600;white-space:nowrap}
+  .sitenav .links a:hover{color:var(--primary)}
+  .sitenav .links a.active{color:var(--primary)}
+  .sitenav .cta{background:#1e3a8a;color:#fff;padding:11px 20px;border-radius:6px;font-weight:700;font-size:16px;text-decoration:none;white-space:nowrap}
+  .sitenav .cta:hover{background:#1e40af}
+  .sitenav .ptag{font-size:11px;color:var(--ink-soft);border:1px solid var(--line);border-radius:999px;padding:3px 9px;margin-left:4px}
+  @media(max-width:900px){.sitenav .links{display:none}}
+
+  /* progress */
+  .progress{display:flex;gap:6px;margin:0 2px 18px}
+  .progress .seg{flex:1;height:8px;border-radius:999px;background:var(--line);transition:.3s}
+  .progress .seg.done{background:var(--primary)}
+  .progress .seg.active{background:var(--primary-dark)}
+
+  .layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px}
+  .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px}
+  h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
+  .sub{color:var(--ink-soft);margin:0 0 26px;font-size:17px}
+
+  .opts{display:flex;flex-direction:column;gap:13px}
+  .opt{display:flex;flex-direction:row;gap:18px;align-items:center;text-align:left;padding:19px 21px;border:1.5px solid var(--line);border-radius:14px;background:#fff;cursor:pointer;transition:.15s;width:100%;font:inherit;color:inherit;box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  .opt:hover{border-color:var(--primary);background:var(--primary-soft);transform:translateY(-1px);box-shadow:var(--shadow)}
+  .opt.sel{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 0 0 3px var(--primary-soft)}
+  .opt .ic{width:54px;height:54px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+  .opt .ic svg{width:28px;height:28px;display:block}
+  .opt.sel .ic{background:var(--primary);color:#fff}
+  .opt .otxt{display:flex;flex-direction:column;gap:3px}
+  .opt .ok{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
+  .opt .ot{font-weight:700;font-size:18px;display:block}
+  .opt .od{font-size:15px;color:var(--ink-soft);margin-top:2px;display:block}
+
+  /* step 1 service cards (with photos) */
+  .svc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px}
+  @media(max-width:720px){.svc{grid-template-columns:1fr}}
+  .svccard{display:flex;flex-direction:column;text-align:left;border:1.5px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:.15s;font:inherit;color:inherit;padding:0}
+  .svccard:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}
+  .svccard.sel{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+  .svccard .pic{position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;background:linear-gradient(135deg,#dbeafe,#d1fae5)}
+  .svccard .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .svccard .body{padding:24px 22px 28px}
+  .svccard .ok{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+  .svccard .ttl{font-weight:800;font-size:25px;letter-spacing:-.01em;line-height:1.15;margin:0 0 13px;display:block}
+  .svccard .od{font-size:15px;color:var(--ink-soft);display:block;line-height:1.6}
+
+  .count{display:flex;align-items:center;gap:18px;margin:6px 0 4px}
+  .count button{width:56px;height:56px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-size:26px;cursor:pointer;color:var(--ink)}
+  .count button:hover{border-color:var(--primary);color:var(--primary-dark)}
+  .count .n{font-size:52px;font-weight:800;min-width:90px;text-align:center;letter-spacing:-.03em}
+  .count .u{color:var(--ink-soft);font-size:15px}
+  .paxin{width:150px;text-align:center;font-family:var(--font-head);font-size:46px;font-weight:800;letter-spacing:-.03em;color:var(--ink);border:1.5px solid var(--line);border-radius:14px;padding:6px 8px}
+  .paxin:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+  .paxin::-webkit-outer-spin-button,.paxin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  .paxin{-moz-appearance:textfield}
+  input[type=range]{width:100%;accent-color:var(--primary)}
+  .hint{font-size:14px;color:var(--ink-soft);margin-top:10px}
+  .banner{margin-top:16px;padding:12px 14px;border-radius:10px;font-size:13.5px;display:flex;gap:9px;align-items:flex-start}
+  .banner.warn{background:var(--flag-soft);color:#7c4a03;border:1px solid #fde68a}
+  .banner.ok{background:var(--buy-soft);color:#166534;border:1px solid #bbf7d0}
+
+  .field{margin:14px 0}
+  .field label{display:block;font-weight:600;font-size:15px;margin-bottom:6px}
+  .field input,.field select,.field textarea{width:100%;padding:11px 13px;border:1.5px solid var(--line);border-radius:10px;font:inherit;background:#fff}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
+  .field input[type=date]{height:56px;border-radius:12px;padding:0 16px;font-size:16.5px;color:var(--ink)}
+  .field input[type=date]::-webkit-calendar-picker-indicator{cursor:pointer;width:20px;height:20px;opacity:.55}
+  .field input[type=date]:hover::-webkit-calendar-picker-indicator{opacity:.85}
+  .field input.fpick{height:56px;border-radius:12px;padding:0 16px;font-size:16.5px;cursor:pointer;background:#fff}
+  /* flatpickr theming */
+  .flatpickr-calendar{border-radius:14px;box-shadow:0 14px 48px rgba(0,0,0,.18);border:1px solid var(--line)}
+  .flatpickr-current-month,.flatpickr-weekday,.flatpickr-day,.flatpickr-monthDropdown-months{font-family:var(--font-head)}
+  .flatpickr-day.selected,.flatpickr-day.selected:hover,.flatpickr-day.startRange,.flatpickr-day.endRange{background:var(--primary);border-color:var(--primary)}
+  .flatpickr-day:hover{background:var(--primary-soft)}
+  .flatpickr-day.today{border-color:var(--primary)}
+  .flatpickr-day.today:hover{background:var(--primary-soft);color:var(--ink)}
+  .flatpickr-months .flatpickr-prev-month:hover svg,.flatpickr-months .flatpickr-next-month:hover svg{fill:var(--primary)}
+  .field select{height:56px;border-radius:12px;padding:0 16px;font-size:16.5px;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-soft) 50%),linear-gradient(135deg,var(--ink-soft) 50%,transparent 50%);background-position:calc(100% - 18px) 24px,calc(100% - 12px) 24px;background-size:6px 6px,6px 6px;background-repeat:no-repeat}
+
+  /* activity grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;max-height:560px;overflow:auto;padding:4px;margin:-4px}
+  .act{border:1.5px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;background:#fff;transition:.15s;position:relative;display:flex;flex-direction:column}
+  .act:hover{border-color:var(--primary);transform:translateY(-2px)}
+  .act.sel{border-color:var(--primary-dark);box-shadow:0 0 0 3px var(--primary-soft)}
+  .act .ph{position:relative;aspect-ratio:1;overflow:hidden;background:linear-gradient(135deg,#dbeafe,#d1fae5)}
+  .act .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .act .ph .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-size:12px;font-weight:800;color:#1e40af;letter-spacing:.02em}
+  .act .nm{padding:10px 12px 12px;font-size:14px;font-weight:700;line-height:1.25}
+  .act .info{position:absolute;top:6px;right:6px;width:27px;height:27px;border-radius:50%;border:none;background:rgba(255,255,255,.92);color:var(--ink);font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.18);z-index:2}
+  .act .info:hover{background:var(--primary);color:#fff}
+  .act .bdg{position:absolute;top:7px;left:7px;font-size:10px;font-weight:800;padding:3px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em}
+
+  /* activity details modal */
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;align-items:center;justify-content:center;padding:18px;z-index:80}
+  .modal.show{display:flex}
+  .modal-box{background:#fff;border-radius:16px;max-width:560px;width:100%;position:relative;box-shadow:0 24px 70px rgba(0,0,0,.35);max-height:92vh;overflow-y:auto}
+  .modal-x{position:absolute;top:10px;right:12px;width:34px;height:34px;border:none;border-radius:50%;background:rgba(255,255,255,.9);font-size:22px;line-height:1;cursor:pointer;z-index:2}
+  .modal-img{position:relative;aspect-ratio:16/9;overflow:hidden;background:linear-gradient(135deg,#dbeafe,#d1fae5);border-radius:16px 16px 0 0}
+  .modal-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+  .modal-cont{padding:22px}
+  .modal-cont h2{margin:10px 0 8px;font-size:21px;letter-spacing:-.01em}
+  .modal-cont p{color:var(--ink-soft);font-size:14.5px;margin:0 0 18px}
+  .mtag{display:inline-block;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;background:var(--bg);border:1px solid var(--line);margin:0 6px 6px 0}
+  .mtag.q{background:var(--flag-soft);color:var(--flag);border-color:#fde68a}
+  .mtag.ok{background:var(--buy-soft);color:#166534;border-color:#bbf7d0}
+  .modal-actions{display:flex;gap:10px;flex-wrap:wrap}
+  .modal-actions .btn{flex:1;min-width:140px;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+  .bdg.q{background:var(--flag-soft);color:var(--flag)}
+  .bdg.s{background:rgba(0,0,0,.6);color:#fff}
+  .filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--ink-soft)}
+  .combine{margin-top:16px;border:1.5px dashed var(--line);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:#fff}
+  .combine .ct{font-size:13.5px;color:var(--ink-soft)}
+  .combine .ct b{color:var(--ink)}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:9px 13px;border:1.5px solid var(--line);border-radius:999px;background:#fff;cursor:pointer;font-size:13.5px;font-weight:600;transition:.15s}
+  .chip:hover{border-color:var(--primary)}
+  .chip.sel{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff}
+
+  .nav{display:flex;justify-content:space-between;margin-top:24px;gap:10px}
+  .btn{padding:15px 28px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:.15s}
+  .btn:hover{border-color:var(--ink-soft)}
+  .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  .btn.primary:hover{background:var(--primary-dark);border-color:var(--primary-dark)}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .btn.primary:disabled{background:#cbd5e1;border-color:#cbd5e1;color:#fff;opacity:1}
+
+  /* summary panel */
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;position:sticky;top:92px}
+  .panel h3{margin:0 0 16px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
+  .srow{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:7px 0;border-bottom:1px dashed var(--line)}
+  .srow .k{color:var(--ink-soft)}
+  .srow .v{font-weight:700;text-align:right}
+  .price{margin-top:16px;padding-top:14px}
+  .price .amt{font-size:44px;font-weight:800;letter-spacing:-.03em}
+  .price .lbl{font-size:13.5px;color:var(--ink-soft)}
+  .flags{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+  .flagchip{font-size:11.5px;background:var(--flag-soft);color:var(--flag);padding:5px 9px;border-radius:8px;font-weight:600}
+  .route{margin-top:14px;padding:10px 12px;border-radius:10px;font-size:12.5px;font-weight:700;text-align:center}
+  .route.buy{background:var(--buy-soft);color:#166534}
+  .route.quote{background:var(--quote-soft);color:#9a3412}
+
+  /* outcome screens */
+  .outcome{text-align:center;padding:14px 8px}
+  .outcome .ic{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 18px}
+  .outcome .ic svg{width:34px;height:34px}
+  .outcome h1{font-size:30px}
+  .summary-box{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;margin:18px 0}
+  .mock{font-size:12px;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px 12px;margin-top:12px}
+  .note{font-size:13px;color:var(--ink-soft);text-align:center;margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
+</style>
+</head>
+<body>
+<nav class="sitenav">
+  <div class="inner">
+    <a class="brand" href="https://jambar.biz/" target="_blank" rel="noopener"><img src="https://jambar.biz/wp-content/uploads/2026/03/Jambar-Team-Building-Logo.webp" alt="Jambar Team Building" referrerpolicy="no-referrer"></a>
+    <div class="links">
+      <a href="https://jambar.biz/team-building-activities/" class="active" target="_blank" rel="noopener">Team Building Fun</a>
+      <a href="https://jambar.biz/team-building-growth/" target="_blank" rel="noopener">Team Building Growth</a>
+      <a href="https://jambar.biz/team-performance/" target="_blank" rel="noopener">Team Performance ▾</a>
+      <a href="https://jambar.biz/jambar-testimonials/" target="_blank" rel="noopener">Reviews</a>
+      <a href="https://jambar.biz/about-us/" target="_blank" rel="noopener">About Us</a>
+      <a class="cta" href="https://jambar.biz/contact-us-now/" target="_blank" rel="noopener">Contact Us</a>
+      <span class="ptag">Prototype</span>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="progress" id="progress"></div>
+
+  <div class="layout">
+    <div id="stage"></div>
+    <aside class="panel" id="panel"></aside>
+  </div>
+
+  <div class="modal" id="modal"><div class="modal-box">
+    <button class="modal-x" id="modalX">×</button>
+    <div class="modal-img" id="mImg"></div>
+    <div class="modal-cont">
+      <div id="mTags"></div>
+      <h2 id="mName"></h2>
+      <p id="mDesc"></p>
+      <div class="modal-actions">
+        <a id="mLink" target="_blank" rel="noopener" class="btn">View full page ↗</a>
+        <button id="mPick" class="btn primary">Select &amp; continue</button>
+      </div>
+      <div class="mock">Prototype: "View full page" opens the real activity page on jambarteambuilding.com in a new tab.</div>
+    </div>
+  </div></div>
+
+  <p class="note">Working prototype, front-end only. Payment, CRM writes and emails are simulated and labelled. Pricing rule: <b>greater of S$1,200 or headcount × S$65</b>. Colours &amp; activity tags are placeholders for you to correct.</p>
+</div>
+
+<script>
+/* ---------------- Activity data (inferred from jambarteambuilding.com, correct as needed) ---------------- */
+const IMG="https://jambarteambuilding.com/wp-content/uploads";
+const SITE="https://jambarteambuilding.com/portfolio-item";
+const ACTIVITIES=[
+ {id:1,name:"Are You Ready for AI?",set:"outdoor",q:false,img:`${IMG}/2026/04/2025.08.05-NUS-190-2-1-300x300.jpg`,url:`${SITE}/are-you-ready-for-ai/`,desc:"An immersive outdoor experience where teams use AI tools to solve real-world challenges across multiple stations."},
+ {id:2,name:"AI Murder Mystery",set:"indoor",q:true,img:`${IMG}/2026/04/AI-Murder-Mystery-300x300.jpg`,url:`${SITE}/ai-murder-mystery-team-building-activity/`,desc:"A bespoke, interactive murder investigation powered by AI and built around your company culture."},
+ {id:3,name:"The AI Collaboration Challenge",set:"indoor",q:false,img:`${IMG}/2026/02/The-AI-Collaboration-Challenge-300x300.jpg`,url:`${SITE}/ai-team-building-activity/`,desc:"A high-energy workshop that turns AI from a distant technology into an everyday thinking partner."},
+ {id:4,name:"Space Command",set:"indoor",q:false,img:`${IMG}/2026/04/Space-Command-Featured-Image-300x300.jpg`,url:`${SITE}/space-command-team-building-activity/`,desc:"A fast-paced simulation where teams become a starship command crew making high-stakes decisions in real time."},
+ {id:5,name:"The Eco Heist",set:"indoor",q:false,img:`${IMG}/2026/03/The-Eco-Heist-300x300.jpg`,url:`${SITE}/eco-heist-team-building-activity/`,desc:"A puzzle-based race against the clock to solve clues and restore balance in a sustainability-themed mission."},
+ {id:6,name:"Dome-ination Trail Challenge",set:"outdoor",q:false,img:`${IMG}/2025/06/Dome-ination-Trail-Challenge-Activity-Image-300x300.jpg`,url:`${SITE}/dome-ination-challenge/`,desc:"Gardens by the Bay becomes an adventure playground in an epic quest for discovery."},
+ {id:7,name:"Sugar Rush (cake decorating)",set:"indoor",q:true,img:`${IMG}/2025/02/Sugar-Rush-Activity-Image.png`,url:`${SITE}/sugar-rush-cake-decoration-team-building/`,desc:"Teams decorate sheet cakes into edible masterpieces in a fun, sweet, creative competition."},
+ {id:8,name:"Shark Tank",set:"indoor",q:false,img:`${IMG}/2024/01/Screenshot-2024-01-02-7.49.55-AM.png`,url:`${SITE}/shark-tank/`,desc:"An idea-generation and innovation workshop using the exciting Shark Tank format as inspiration."},
+ {id:9,name:"The Big Picture (art jamming)",set:"indoor",q:true,img:`${IMG}/2021/02/2019-11-25-Jumbar-Team-Building-80-300x300.jpg`,url:`${SITE}/art-jamming/`,desc:"An art-jamming activity where each team's canvas combines into one big collective masterpiece."},
+ {id:10,name:"Graffiti Art",set:"both",q:true,img:`${IMG}/2021/02/DzaaXDyU8AEUw2P-300x300.jpeg`,url:`${SITE}/graffiti-art/`,desc:"Create a unique graffiti masterpiece inspired by your company values, mission or conference theme."},
+ {id:11,name:"SolarBuddy, Hour of Power (CSR)",set:"indoor",q:true,img:`${IMG}/2024/01/8.png`,url:`${SITE}/solar-buddy/`,desc:"A hands-on CSR/ESG program assembling solar lights to tackle energy poverty and bring values to life."},
+ {id:12,name:"Lateral Thinking",set:"indoor",q:false,img:`${IMG}/2024/12/21118165_6427852-1030x1030.jpg`,url:`${SITE}/lateral-thinking/`,desc:"A creative problem-solving session that reframes challenges and explores unconsidered paths."},
+ {id:13,name:"Breaking Barriers",set:"indoor",q:false,img:`${IMG}/2021/02/D1V2SNGVAAArdHs-300x300.jpeg`,url:`${SITE}/breaking-barriers/`,desc:"Identify, acknowledge and overcome the fears and insecurities holding the team back."},
+ {id:14,name:"60 Seconds to Win It",set:"indoor",q:false,img:`${IMG}/2021/02/DopEBL0VAAA07ST-300x300.jpeg`,url:`${SITE}/60-seconds-to-win/`,desc:"Minute-long challenges using everyday items in surprising, unexpected ways, all in the name of fun."},
+ {id:15,name:"The Virus Challenge",set:"indoor",q:false,img:`${IMG}/2019/10/Virus-02.jpg`,url:`${SITE}/virus-challenge/`,desc:"A board-game-based challenge where teams compete to save humanity from a deadly outbreak."},
+ {id:16,name:"Bridging The Gap",set:"indoor",q:false,img:`${IMG}/2021/02/DxE9U-_UwAAhkhV-copy-300x300.jpeg`,url:`${SITE}/bridging-the-gap/`,desc:"Design and build a race track, then race remote-control cars in a mini Grand Prix."},
+ {id:17,name:"Murder Mystery",set:"indoor",q:false,img:`${IMG}/2021/02/rsz_do9qybxvaaetvfn-300x300.jpg`,url:`${SITE}/the-murder-mystery/`,desc:"A whodunit acted out with scripts and props, work together to solve the crime."},
+ {id:18,name:"The Chain Reaction Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Dzu8t79U8AAf0oy-300x300.jpeg`,url:`${SITE}/the-chain-reaction-challenge/`,desc:"Build a topple paradise full of tricks, obstacles and creative planning."},
+ {id:19,name:"Change It Up",set:"indoor",q:false,img:`${IMG}/2021/02/DqQDK-GWkAEXesk-300x300.jpeg`,url:`${SITE}/change-it-up/`,desc:"Travel back to 14th-century Singapore and experience the lost art of friendly bartering."},
+ {id:20,name:"The Domino Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/DsAiHfbVYAAV7xr-300x300.jpeg`,url:`${SITE}/the-domino-challenge/`,desc:"Meticulously build and trigger an epic domino chain reaction together."},
+ {id:21,name:"Escape Room: Prison Break",set:"indoor",q:false,img:`${IMG}/2021/02/AB-Sciex-37-300x300.jpg`,url:`${SITE}/prison-break/`,desc:"An escape-room edition, crack the code to break out of an old abandoned prison before time runs out."},
+ {id:22,name:"The Drone Challenge",set:"both",q:true,img:`${IMG}/2021/02/IMG_1600-300x300.jpg`,url:`${SITE}/the-drone-challenge/`,desc:"Plan and build obstacles, attend flight school, then race drones through a team-built course."},
+ {id:23,name:"The Casino Heist",set:"indoor",q:false,img:`${IMG}/2021/02/ITS-64-300x300.jpg`,url:`${SITE}/casino-heist/`,desc:"A number-crunching, puzzle-solving strategy game with a casino-heist twist."},
+ {id:24,name:"Deadline",set:"indoor",q:false,img:`${IMG}/2021/02/Singtel-32-300x300.jpg`,url:`${SITE}/deadline/`,desc:"A strategy game mastering the procurement, transportation and production of goods."},
+ {id:25,name:"The Creative Putting Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Silver-Bullet-77-300x300.jpg`,url:`${SITE}/creative-putting-challenge/`,desc:"Against the clock, design and build a playable mini-putt hole from the materials provided."},
+ {id:26,name:"The Tailor (agile/scrum)",set:"indoor",q:false,img:`${IMG}/2021/02/2019-11-05-Jambar-Team-Building-51-300x300.jpg`,url:`${SITE}/the-tailor/`,desc:"A Scrum-methodology simulation showing what it really means to be agile in a changing environment."},
+ {id:27,name:"The Fashion Show Game",set:"indoor",q:false,img:`${IMG}/2021/02/Alimak-Group-176-300x300.jpg`,url:`${SITE}/fashion-show-game/`,desc:"A trivia-fuelled fashion quiz, then design outfits and strut them in a wild fashion show."},
+ {id:28,name:"Singapore Heritage Trail",set:"outdoor",q:false,img:`${IMG}/2020/10/DpwNpMGU4AAWhVC-300x300.jpeg`,url:`${SITE}/singapore-heritage-trial/`,desc:"Discover the Lion City through culture-based challenges built around local traditions."},
+ {id:29,name:"The Wild Goats Challenge",set:"outdoor",q:false,img:`${IMG}/2021/01/DslgINyV4AAu-nI-300x300.jpeg`,url:`${SITE}/the-wild-goats-challenge/`,desc:"The fun, stimulating and occasionally ridiculous digital challenge that built Jambar's reputation."},
+ {id:30,name:"The Running Man Challenge",set:"outdoor",q:false,img:`${IMG}/2021/01/DyxF47MUcAErbXL-300x298.jpeg`,url:`${SITE}/the-running-man-challenge/`,desc:"The South Korean game-show hit brought to Singapore with collaborative bonding challenges."},
+ {id:31,name:"Are You App For the Hunt?",set:"outdoor",q:false,img:`${IMG}/2021/01/Screen-Shot-2021-01-27-at-4.33.01-PM-300x300.png`,url:`${SITE}/are-you-app-for-the-hunt/`,desc:"A tech-based hunt that eases change management and adapts teams to new technologies."},
+ {id:32,name:"The Amazing Race Challenge",set:"outdoor",q:false,img:`${IMG}/2021/02/DsBeY4HVAAEjJ_0-300x300.jpeg`,url:`${SITE}/amazing-race/`,desc:"Race between checkpoints across the city, expect exciting roadblocks and detours as you finish first."},
+ {id:33,name:"Treasure Hunt",set:"outdoor",q:false,img:`${IMG}/2024/11/Dxj1g7vVsAA0amA-1030x1030.jpg`,url:`${SITE}/treasure-hunt/`,desc:"A map-led hunt for hidden treasure using clues based on Singapore's architecture and monuments."},
+ {id:34,name:"Bicycle Scavenger Hunt",set:"outdoor",q:true,img:`${IMG}/2021/02/AXA-58-300x300.jpg`,url:`${SITE}/bicycle-scavenger-hunt/`,desc:"Cycle between checkpoints tackling tests of strength, willpower and brainteasers."},
+ {id:35,name:"Cardboard Boat Challenge",set:"outdoor",q:true,img:`${IMG}/2021/02/DrYIHdhU8AEPDVf-300x300.jpeg`,url:`${SITE}/cardboard-boat-building-challenge/`,desc:"Build a boat from limited materials, then race it in a wild, watery finale."},
+ {id:36,name:"Collaborate!",set:"both",q:false,img:`${IMG}/2021/02/DsFmnZTV4AAfA-m-300x300.jpeg`,url:`${SITE}/collaborate/`,desc:"A mission-rich activity with a twist: competing teams must cooperate via tablets to maximise scores."},
+ {id:37,name:"Beach Olympics",set:"outdoor",q:true,img:`${IMG}/2021/02/Dr8mAQ4VsAAFuCF-300x300.jpeg`,url:`${SITE}/beach-olympics/`,desc:"Gold-medal team bonding on Singapore's shores with a series of lighthearted beachside competitions."},
+ {id:38,name:"The F1 Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Dpl8xibUUAU3Bb--300x300.jpeg`,url:`${SITE}/the-f1-challenge/`,desc:"Craft custom cars, create your champions' chant, then race them to leave the competition in the dust."},
+ {id:39,name:"Discover Singapore",set:"outdoor",q:false,img:`${IMG}/2021/02/DphsT4OUYAAaf9P-300x300.jpeg`,url:`${SITE}/discover-singapore/`,desc:"Move from landmark to landmark solving puzzles and discovering Singapore along the way."}
+];
+
+const RATE=65, MIN=1200, CAP=30, VOL=100, WATER=3, VENUE=750;
+const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,activityId:null,combine:false,duration:"half",extras:[]};
+
+/* steps in the self-serve flow */
+const STEPS=["purpose","headcount","date","setting","activity","duration","extras","route"];
+let stepIdx=0;
+let terminal=null; // 'growth' | 'nurture'
+
+const $=s=>document.querySelector(s);
+const money=n=>"S$"+n.toLocaleString();
+const fmt=d=>d?new Date(d+"T00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"";
+
+const ICONS={
+ celebrate:`<path d="m12 3 1.8 4.3L18 9l-4.2 1.7L12 15l-1.8-4.3L6 9l4.2-1.7Z"/><path d="M19 13l.9 2 2 .9-2 .9L19 19l-.9-2-2-.9 2-.9Z"/>`,
+ target:`<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.6" fill="currentColor" stroke="none"/>`,
+ calendar:`<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>`,
+ month:`<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="1.7" fill="currentColor" stroke="none"/>`,
+ search:`<circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>`,
+ building:`<path d="M3 21h18"/><path d="M6 21V4a1 1 0 0 1 1-1h7a1 1 0 0 1 1 1v17"/><path d="M16 21V11h2a1 1 0 0 1 1 1v9"/><line x1="9" y1="7" x2="11" y2="7"/><line x1="9" y1="11" x2="11" y2="11"/><line x1="9" y1="15" x2="11" y2="15"/>`,
+ leaf:`<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.5 19 2c1 2 2 4.2 2 8 0 5.5-4.8 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6"/>`,
+ pin:`<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>`,
+ clock:`<circle cx="12" cy="12" r="9"/><polyline points="12 7 12 12 15 14"/>`,
+ sun:`<circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.9" y1="4.9" x2="6.3" y2="6.3"/><line x1="17.7" y1="17.7" x2="19.1" y2="19.1"/><line x1="4.9" y1="19.1" x2="6.3" y2="17.7"/><line x1="17.7" y1="6.3" x2="19.1" y2="4.9"/>`,
+ calcheck:`<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><polyline points="8.5 15 10.5 17 15 12.5"/>`,
+ pause:`<circle cx="12" cy="12" r="9"/><line x1="10" y1="9.5" x2="10" y2="14.5"/><line x1="14" y1="9.5" x2="14" y2="14.5"/>`,
+ card:`<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>`,
+ doc:`<path d="M14 3v5h5"/><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="13" y2="17"/>`
+};
+const icon=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]||""}</svg>`;
+
+function priceFor(pax){return Math.max(MIN, pax*RATE);}
+function waterCost(){return state.extras.includes("Water")?WATER*state.headcount:0;}
+function venueCost(){return (state.setting==="indoor"&&state.venue==="plus")?VENUE:0;}
+function venueLabel(){return state.venue==="own"?"Own venue":state.venue==="plus"?"Venue Plus (+S$750)":state.venue==="more"?"More options (quote)":"";}
+
+function activity(){return ACTIVITIES.find(a=>a.id===state.activityId);}
+
+function dateLabel(){
+  if(state.rush) return "Rush, under 1 wk";
+  if(state.dateMode==="exploring") return "Just exploring";
+  if(state.dateMode==="month") return state.month?("~"+state.month):"Rough month";
+  if(state.dateMode==="specific"){
+    if(state.hold) return "Holding "+state.dates.filter(x=>x).length+" dates";
+    if(state.date) return fmt(state.date);
+    const n=state.dates.filter(x=>x).length; if(n) return n+" option"+(n>1?"s":"");
+  }
+  return "";
+}
+
+function flags(){
+  const f=[];
+  if(state.headcount>CAP) f.push(state.headcount>=VOL?"Large event · volume pricing":"Large group (31+ pax)");
+  if(state.rush) f.push("Rush event (under 1 week)");
+  if(state.hold) f.push("Holding multiple dates");
+  if(state.setting==="outdoor-custom") f.push("Custom location");
+  if(state.setting==="indoor"&&state.venue==="more") f.push("More venue options");
+  const a=activity(); if(a&&a.q) f.push("Premium / materials activity");
+  if(state.combine) f.push("Combining multiple activities");
+  const bespoke=state.extras.filter(e=>e!=="Water");
+  if(bespoke.length) f.push("Add-ons: "+bespoke.join(", "));
+  if(state.duration==="full") f.push("Full day");
+  return f;
+}
+function isBuyNow(){return flags().length===0;}
+
+/* ---------------- render progress + panel ---------------- */
+function renderProgress(){
+  const p=$("#progress");p.innerHTML="";
+  STEPS.forEach((s,i)=>{
+    const d=document.createElement("div");
+    d.className="seg"+(i<stepIdx?" done":"")+(i===stepIdx?" active":"");
+    p.appendChild(d);
+  });
+}
+function renderPanel(){
+  const pax=state.headcount, pr=priceFor(pax), a=activity(), fl=flags();
+  const big=pax>CAP;
+  let rows="";
+  const add=(k,v)=>{if(v)rows+=`<div class="srow"><span class="k">${k}</span><span class="v">${v}</span></div>`;};
+  add("Type", state.purpose);
+  add("Group size", pax+" pax");
+  add("Date", dateLabel());
+  add("Setting", state.setting?state.setting.replace("-"," · "):"");
+  if(state.setting==="indoor") add("Venue", venueLabel());
+  add("Activity", a?a.name:(state.combine?"Combining multiple":""));
+  add("Duration", state.duration==="full"?"Full day":(stepIdx>=5?"Half day":""));
+  add("Extras", state.extras.length?state.extras.join(", "):(stepIdx>=6?"None":""));
+
+  const wc=waterCost(), vc=venueCost();
+  let amt,lbl,amtStyle="";
+  if(pax<=CAP){ amt=money(pr+wc+vc); lbl = (pr===MIN ? "minimum spend (under ~18 pax)" : "S$65/pax × "+pax) + (wc?" + water":"") + (vc?" + venue S$750":""); }
+  else if(pax<VOL){ amt=money(pax*RATE+wc+vc); lbl="from S$65/pax · final quote"; }
+  else { amt="Volume pricing"; lbl="tailored for large events"; amtStyle=" style=\"font-size:28px\""; }
+  let priceBlock=`<div class="price"><div class="amt"${amtStyle}>${amt}</div><div class="lbl">${lbl}</div></div>`;
+
+  let flagBlock = fl.length ? `<div class="flags">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>` : "";
+  let routeBlock = stepIdx>0 ? `<div class="route ${isBuyNow()&&!big?"buy":"quote"}">${isBuyNow()&&!big?"➜ ON TRACK FOR BUY NOW":"➜ ROUTES TO QUOTE"}</div>` : "";
+
+  $("#panel").innerHTML=`<h3>Your event</h3>${rows||'<div class="srow"><span class="k">Nothing selected yet</span></div>'}${priceBlock}${flagBlock}${routeBlock}`;
+}
+
+/* ---------------- step renderers ---------------- */
+function optHTML(ic,t,d,sel){return `<button class="opt${sel?" sel":""}"><span class="ic">${icon(ic)}</span><span class="otxt"><span class="ot">${t}</span><span class="od">${d}</span></span></button>`;}
+
+function renderStep(){
+  if(terminal){renderTerminal();return;}
+  renderProgress();renderPanel();
+  const s=STEPS[stepIdx];const st=$("#stage");
+  let html="";
+
+  if(s==="purpose"){
+    html=`<div class="card"><p class="step-k">Step 1 of 7</p><h1>What's this team day for?</h1>
+    <div class="svc">
+      <button class="svccard${state.purpose==="Team Building for Fun"?" sel":""}">
+        <span class="pic"><img src="fun.jpg" alt="Team Building for Fun" referrerpolicy="no-referrer" onerror="this.remove()"></span>
+        <span class="body"><span class="ttl" style="color:var(--primary)">Team Building for Fun</span><span class="od">Quick, high-energy bonding with no agenda to manage. Your people play, laugh and connect, the simplest way to recharge a team, welcome new people, or celebrate a win.</span></span>
+      </button>
+      <button class="svccard">
+        <span class="pic" style="background:linear-gradient(135deg,#bbf7d0,#86efac)"><img src="growth.jpg" alt="Team Building for Growth" referrerpolicy="no-referrer" onerror="this.remove()"></span>
+        <span class="body"><span class="ttl" style="color:var(--grow)">Team Building for Growth</span><span class="od">Outcome-focused sessions with reflection built in. We design around the result you need (trust, resilience, AI adoption, disengaged employees, etc.) and facilitate to deliver it.</span></span>
+      </button>
+    </div></div>`;
+    st.innerHTML=html;
+    const b=st.querySelectorAll(".svccard");
+    b[0].onclick=()=>{state.purpose="Team Building for Fun";next();};
+    b[1].onclick=()=>{terminal="growth";renderStep();};
+  }
+
+  else if(s==="headcount"){
+    const pax=state.headcount;
+    let banner;
+    if(pax<=CAP) banner=`✓ Within self-serve range, you can book &amp; pay online.`;
+    else if(pax<VOL) banner=`⚑ Over ${CAP} pax, we'll keep configuring then tailor a quote (no instant checkout for larger groups).`;
+    else banner=`⚑ Large event, volume pricing. We regularly run 500&ndash;1000 pax events, we'll tailor pricing and logistics for you.`;
+    const chips=[10,20,30,50,100,200];
+    html=`<div class="card"><p class="step-k">Step 2 of 7</p><h1>How many people?</h1><p class="sub">Up to ${CAP} pax can book online instantly. Larger groups get a tailored quote, and big events get volume pricing.</p>
+    <div class="count">
+      <button id="minus" aria-label="decrease">&minus;</button>
+      <input id="paxInput" class="paxin" type="number" min="1" inputmode="numeric" value="${pax}">
+      <span class="u">pax</span>
+      <button id="plus" aria-label="increase">+</button>
+    </div>
+    <div class="chips" id="paxChips" style="margin-top:18px">${chips.map(c=>`<div class="chip${pax===c?" sel":""}" data-c="${c}">${c===200?"200+":c}</div>`).join("")}</div>
+    <div class="banner ${pax<=CAP?"ok":"warn"}" style="margin-top:20px">${banner}</div>
+    </div>`;
+    st.innerHTML=html;
+    const upd=v=>{v=parseInt(v,10);if(isNaN(v))v=1;state.headcount=Math.max(1,Math.min(5000,v));renderStep();};
+    $("#minus").onclick=()=>upd(state.headcount-1);
+    $("#plus").onclick=()=>upd(state.headcount+1);
+    $("#paxInput").onchange=e=>upd(e.target.value);
+    $("#paxInput").oninput=e=>{const v=parseInt(e.target.value,10);if(!isNaN(v)){state.headcount=Math.max(1,Math.min(5000,v));renderPanel();}};
+    $("#paxChips").querySelectorAll(".chip").forEach(c=>c.onclick=()=>upd(+c.dataset.c));
+    addNav();
+  }
+
+  else if(s==="date"){
+    const minDate=new Date(Date.now()+7*864e5).toISOString().split("T")[0];
+    html=`<div class="card"><p class="step-k">Step 3 of 7</p><h1>When's the event?</h1><p class="sub">You're always available, so it comes down to how settled your dates are.</p>
+    <div class="opts">
+      ${optHTML("calendar","I have my date(s)","One date, or a few specific options to choose from.",state.dateMode==="specific")}
+      ${optHTML("month","I only know the rough month","A target month, no specific day yet.",state.dateMode==="month")}
+      ${optHTML("search","Just exploring / budgeting","We'll send a price guide, no pressure.",state.dateMode==="exploring")}
+    </div>
+    <div id="datebody"></div></div>`;
+    st.innerHTML=html;
+    const b=st.querySelectorAll(".opt");
+    b[0].onclick=()=>{state.dateMode="specific";if(!state.dates.length)state.dates=[""];renderStep();};
+    b[1].onclick=()=>{state.dateMode="month";renderStep();};
+    b[2].onclick=()=>{state.dateMode="exploring";terminal="nurture";renderStep();};
+    addNav();
+    if(state.dateMode==="specific")buildSpecific();
+    else if(state.dateMode==="month")buildMonth();
+
+    function buildSpecific(){
+      const dp=$("#datebody");if(!dp)return;
+      if(!state.dates.length)state.dates=[""];
+      const inputs=state.dates.map((d,i)=>`<div class="field"><label>${i===0?"Date":"Option "+(i+1)}</label><input type="text" class="fpick" data-i="${i}" value="${d}" placeholder="Select a date"></div>`).join("");
+      const addBtn=state.dates.length<3?`<button class="btn" id="addDate" style="padding:8px 14px;font-size:13px">+ Add another possible date</button>`:"";
+      const filled=state.dates.filter(x=>x);
+      let pick="";
+      if(filled.length>=2){
+        pick=`<div style="margin-top:18px"><label style="font-weight:700;font-size:13.5px">All of these are open, how do you want to proceed?</label><div class="opts" style="margin-top:10px">
+          ${filled.map(d=>`<button class="opt${state.date===d&&!state.hold?" sel":""}" data-book="${d}"><span class="ic">${icon('calcheck')}</span><span class="otxt"><span class="ot">Book ${fmt(d)}</span><span class="od">Lock this date &amp; pay now</span></span></button>`).join("")}
+          <button class="opt${state.hold?" sel":""}" data-hold="1"><span class="ic">${icon('pause')}</span><span class="otxt"><span class="ot">Hold all, have us confirm</span><span class="od">Not ready to commit, sales confirms one with you</span></span></button>
+        </div></div>`;
+        // mark selected book button
+        if(state.date&&!state.hold){/* handled below via class injection */}
+      }
+      dp.innerHTML=inputs+addBtn+pick+`<div class="hint" style="margin-top:14px">Online booking needs at least 1 week's notice. Sooner? <a href="#" id="rushlink">Request a quick quote →</a></div>`;
+      dp.querySelectorAll(".fpick").forEach(inp=>{
+        if(window.flatpickr){
+          flatpickr(inp,{minDate:minDate,dateFormat:"Y-m-d",altInput:true,altFormat:"j M Y",disableMobile:true,defaultDate:inp.value||null,
+            onChange:(sel,str)=>{
+              const i=+inp.dataset.i;state.dates[i]=str;
+              const fl=state.dates.filter(x=>x);
+              if(fl.length<=1){state.hold=false;state.date=fl[0]||"";}
+              else if(state.date&&!fl.includes(state.date))state.date="";
+              state.rush=false;renderStep();
+            }});
+        }
+      });
+      const ab=$("#addDate");if(ab)ab.onclick=()=>{if(state.dates.length<3){state.dates.push("");renderStep();}};
+      dp.querySelectorAll("[data-book]").forEach(btn=>{
+        if(state.date===btn.dataset.book&&!state.hold)btn.classList.add("sel");
+        btn.onclick=()=>{state.date=btn.dataset.book;state.hold=false;renderStep();};
+      });
+      const hb=dp.querySelector("[data-hold]");if(hb)hb.onclick=()=>{state.hold=true;state.date="";renderStep();};
+      const rl=$("#rushlink");if(rl)rl.onclick=ev=>{ev.preventDefault();state.rush=true;next();};
+    }
+
+    function buildMonth(){
+      const dp=$("#datebody");if(!dp)return;
+      const now=new Date(),months=[];
+      for(let i=0;i<12;i++){months.push(new Date(now.getFullYear(),now.getMonth()+i,1).toLocaleString("en",{month:"long",year:"numeric"}));}
+      dp.innerHTML=`<div class="field"><label>Which month are you aiming for?</label>
+        <select id="mo"><option value="">Select a month…</option>${months.map(m=>`<option ${state.month===m?"selected":""}>${m}</option>`).join("")}</select></div>
+        <div class="hint">No specific day yet, so this can't book online, but tell us the month and we'll send pricing and help you lock a date when you're ready.</div>
+        <button class="btn primary" id="moGo" style="margin-top:10px" ${state.month?"":"disabled"}>Get pricing for ${state.month||"this month"} →</button>`;
+      $("#mo").onchange=e=>{state.month=e.target.value;renderStep();};
+      const g=$("#moGo");if(g)g.onclick=()=>{terminal="nurture";renderStep();};
+    }
+  }
+
+  else if(s==="setting"){
+    html=`<div class="card"><p class="step-k">Step 4 of 7</p><h1>Indoor or outdoor?</h1><p class="sub">This filters the activities you'll see next.</p>
+    <div class="opts">
+      ${optHTML("building","Indoor","Hotel function room, conference space or your office.",state.setting==="indoor")}
+      ${optHTML("leaf","Outdoor, a standard location","Gardens by the Bay, Sentosa, Clarke Quay.",state.setting==="outdoor-standard")}
+      ${optHTML("pin","Outdoor, a specific or custom location","Somewhere of your choice, we'll quote it.",state.setting==="outdoor-custom")}
+    </div>
+    <div id="venuebody"></div></div>`;
+    st.innerHTML=html;
+    const b=st.querySelectorAll(".opt");
+    b[0].onclick=()=>{state.setting="indoor";clearActivityIfHidden();renderStep();};
+    b[1].onclick=()=>{state.setting="outdoor-standard";state.venue=null;clearActivityIfHidden();renderStep();};
+    b[2].onclick=()=>{state.setting="outdoor-custom";state.venue=null;clearActivityIfHidden();renderStep();};
+    addNav();
+    if(state.setting==="indoor")buildVenue();
+
+    function buildVenue(){
+      const vb=$("#venuebody");if(!vb)return;
+      vb.innerHTML=`<div style="margin-top:22px"><label style="font-weight:700;font-size:15px">Where will the indoor event be?</label><div class="opts" style="margin-top:12px">
+        ${optHTML("building","Your own venue / office","You provide the space. No venue cost, books online.",state.venue==="own")}
+        ${optHTML("pin","Venue Plus  ·  +S$750","A partner venue, half day. Books online.",state.venue==="plus")}
+        ${optHTML("search","Show me more venue options","We'll source options and quote them.",state.venue==="more")}
+      </div></div>`;
+      const v=vb.querySelectorAll(".opt");
+      v[0].onclick=()=>{state.venue="own";renderStep();};
+      v[1].onclick=()=>{state.venue="plus";renderStep();};
+      v[2].onclick=()=>{state.venue="more";renderStep();};
+    }
+  }
+
+  else if(s==="activity"){
+    const list=filteredActivities();
+    html=`<div class="card"><p class="step-k">Step 5 of 7</p><h1>Pick your activity</h1>
+    <p class="sub">Price stays the same whichever you choose, pick on fun, not cost. Facilitator always included.</p>
+    <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span></div>
+    <div class="grid" id="grid"></div>
+    <div class="combine"><div class="ct"><b>Want to combine a few activities or run a full day?</b><br>That's a tailored day, we'll design it with you.</div><button class="btn" id="combineCta">Tailor it for me →</button></div>
+    </div>`;
+    st.innerHTML=html;
+    const g=$("#grid");
+    list.forEach(a=>{
+      const d=document.createElement("div");
+      d.className="act"+(state.activityId===a.id?" sel":"");
+      d.innerHTML=`<div class="ph"><span class="fallback">${a.name}</span><img src="${a.img}" alt="${a.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"><button class="info" title="View details" aria-label="View details">i</button></div>
+        ${a.q?'<span class="bdg q">⚑ Enquire</span>':''}
+        ${state.activityId===a.id?'<span class="bdg s">✓ Selected</span>':''}
+        <div class="nm">${a.name}</div>`;
+      d.onclick=()=>{state.activityId=a.id;state.combine=false;renderStep();};
+      d.querySelector(".info").onclick=e=>{e.stopPropagation();openModal(a.id);};
+      g.appendChild(d);
+    });
+    $("#combineCta").onclick=()=>{state.combine=true;state.activityId=null;next();};
+    addNav();
+  }
+
+  else if(s==="duration"){
+    html=`<div class="card"><p class="step-k">Step 6 of 7</p><h1>Half day or full day?</h1><p class="sub">Most Fun events are half-day. Full day becomes a tailored quote.</p>
+    <div class="opts">
+      ${optHTML("clock","Half day","2 to 3.5 hrs. Books online instantly.",state.duration==="half")}
+      ${optHTML("sun","Full day","A bigger programme, we'll quote it.",state.duration==="full")}
+    </div></div>`;
+    st.innerHTML=html;
+    const b=st.querySelectorAll(".opt");
+    b[0].onclick=()=>{state.duration="half";renderStep();};
+    b[1].onclick=()=>{state.duration="full";renderStep();};
+    addNav();
+  }
+
+  else if(s==="extras"){
+    const opts=[{v:"Water",l:"Water +S$3/pax"},{v:"Catering / F&B",l:"Catering / F&B"},{v:"Transport",l:"Transport"}];
+    html=`<div class="card"><p class="step-k">Step 7 of 7</p><h1>Add anything extra?</h1><p class="sub">Pick none (or just water) and you're ready to book. Water is a 600ml bottle per person. Catering or transport need a human, so they route to a quote.</p>
+    <div class="chips" id="chips">
+      <div class="chip${state.extras.length===0?" sel":""}" data-x="__none">None</div>
+      ${opts.map(o=>`<div class="chip${state.extras.includes(o.v)?" sel":""}" data-x="${o.v}">${o.l}</div>`).join("")}
+    </div></div>`;
+    st.innerHTML=html;
+    $("#chips").querySelectorAll(".chip").forEach(c=>{
+      c.onclick=()=>{
+        const x=c.dataset.x;
+        if(x==="__none"){state.extras=[];}
+        else{state.extras.includes(x)?state.extras=state.extras.filter(e=>e!==x):state.extras.push(x);}
+        renderStep();
+      };
+    });
+    addNav("See result");
+  }
+
+  else if(s==="route"){
+    renderRoute();
+  }
+}
+
+function clearActivityIfHidden(){
+  const a=activity();
+  if(a && !filteredActivities().some(x=>x.id===a.id)) state.activityId=null;
+}
+function filteredActivities(){
+  if(!state.setting) return ACTIVITIES;
+  const out=state.setting.startsWith("outdoor");
+  return ACTIVITIES.filter(a=>a.set==="both"||a.set===(out?"outdoor":"indoor"));
+}
+
+/* ---------------- nav ---------------- */
+function addNav(nextLabel){
+  const st=$("#stage");
+  const nav=document.createElement("div");nav.className="nav";
+  nav.innerHTML=`<button class="btn" id="back">← Back</button><button class="btn primary" id="fwd">${nextLabel||"Continue →"}</button>`;
+  st.querySelector(".card").appendChild(nav);
+  $("#back").onclick=prev; $("#back").disabled=(stepIdx===0);
+  const f=$("#fwd"); f.onclick=next; f.disabled=!canAdvance();
+}
+function canAdvance(){
+  const s=STEPS[stepIdx];
+  if(s==="date") return state.dateMode==="specific" && (!!state.date || state.hold);
+  if(s==="setting") return !!state.setting && (state.setting!=="indoor" || !!state.venue);
+  if(s==="activity") return !!state.activityId || state.combine;
+  return true;
+}
+function next(){if(stepIdx<STEPS.length-1){stepIdx++;renderStep();window.scrollTo({top:0,behavior:"smooth"});}}
+function prev(){if(stepIdx>0){stepIdx--;terminal=null;renderStep();window.scrollTo({top:0,behavior:"smooth"});}}
+
+/* ---------------- outcome screens ---------------- */
+function renderTerminal(){
+  renderProgress();renderPanel();
+  if(terminal==="growth"){
+    $("#stage").innerHTML=`<div class="card outcome">
+      <div class="ic" style="background:var(--grow-soft);color:var(--grow)">${icon('target')}</div>
+      <h1>Sounds like Team Building for Growth</h1>
+      <p class="sub">You want the day to <i>achieve</i> something, an outcome, not just a great time. That's our outcome-led, facilitated track with structured reflection.</p>
+      <button class="btn primary" onclick="alert('PROTOTYPE: redirects to the Team Building for Growth funnel.')">Explore Growth →</button>
+      <div class="mock">Simulated: redirect to /team-building-growth. No sales task created from the Fun funnel.</div>
+      <button class="btn" style="margin-top:14px" onclick="terminal=null;renderStep()">← Actually, it's just for fun</button>
+    </div>`;
+  } else if(terminal==="nurture"){
+    $("#stage").innerHTML=`<div class="card outcome">
+      <div class="ic" style="background:var(--nurture-soft);color:var(--nurture)">${icon('search')}</div>
+      <h1>Here's a price guide to explore</h1>
+      <p class="sub">${state.month?`Aiming for <b>${state.month}</b>, `:""}No firm date yet, no problem. Pop in your email and we'll send pricing and our most-loved activities, no sales call.</p>
+      <div class="field" style="max-width:340px;margin:0 auto"><input type="email" placeholder="you@company.com"></div>
+      <button class="btn primary" style="margin-top:12px" onclick="alert('PROTOTYPE: emails the price guide PDF.')">Send me the guide</button>
+      <div class="mock">Simulated: contact created in Zoho tagged <b>Fun · Nurture (low priority)${state.month?" · "+state.month:""}</b> + auto-email. Not added to the sales queue.</div>
+      <button class="btn" style="margin-top:14px" onclick="terminal=null;state.dateMode=null;state.month='';renderStep()">← Back</button>
+    </div>`;
+  }
+}
+
+function renderRoute(){
+  const a=activity(), pax=state.headcount, big=pax>CAP, fl=flags(), buy=isBuyNow()&&!big;
+  const total=priceFor(pax)+waterCost()+venueCost();
+  const summary=`<div class="summary-box">
+    <div class="srow"><span class="k">Type</span><span class="v">${state.purpose}</span></div>
+    <div class="srow"><span class="k">Group</span><span class="v">${pax} pax</span></div>
+    <div class="srow"><span class="k">Date</span><span class="v">${dateLabel()||"To confirm"}</span></div>
+    <div class="srow"><span class="k">Setting</span><span class="v">${state.setting.replace("-"," · ")}</span></div>
+    ${state.setting==="indoor"?`<div class="srow"><span class="k">Venue</span><span class="v">${venueLabel()}</span></div>`:""}
+    <div class="srow"><span class="k">Activity</span><span class="v">${a?a.name:(state.combine?"Combining multiple, to design":"-")}</span></div>
+    <div class="srow"><span class="k">Duration</span><span class="v">${state.duration==="full"?"Full day":"Half day"}</span></div>
+    <div class="srow"><span class="k">Extras</span><span class="v">${state.extras.length?state.extras.join(", "):"None"}</span></div>
+  </div>`;
+
+  if(buy){
+    $("#stage").innerHTML=`<div class="card outcome">
+      <div class="ic" style="background:var(--buy-soft);color:var(--buy)">${icon('card')}</div>
+      <h1>You're ready to book</h1>
+      <p class="sub">Everything fits the self-serve box, book &amp; pay online now. Zero sales involvement.</p>
+      ${summary}
+      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl">${priceFor(pax)===MIN?"minimum spend":"S$65/pax × "+pax+" pax"}${waterCost()?" + water S$3/pax":""}${venueCost()?" + venue S$750":""} · half day · facilitator included</div></div>
+      <button class="btn primary" style="margin-top:16px" onclick="alert('PROTOTYPE: opens Stripe / HitPay checkout (PayNow, cards, GrabPay).')">Pay ${money(total)} &amp; confirm booking</button>
+      <div class="mock">Simulated: payment via Stripe/HitPay → booking confirmed → order logged in Zoho as <b>Booked / Won</b>. No salesperson touches it.</div>
+      <button class="btn" style="margin-top:14px" onclick="prev()">← Change something</button>
+    </div>`;
+  } else {
+    $("#stage").innerHTML=`<div class="card outcome">
+      <div class="ic" style="background:var(--quote-soft);color:var(--quote)">${icon('doc')}</div>
+      <h1>Let's tailor this for you</h1>
+      <p class="sub">${pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch."} Send it over and we'll confirm fast, most of the work's already done.</p>
+      ${summary}
+      <div class="flags" style="max-width:420px;margin:0 auto">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>
+      <div class="field" style="max-width:340px;margin:16px auto 0"><input type="text" placeholder="Name"></div>
+      <div class="field" style="max-width:340px;margin:0 auto"><input type="email" placeholder="Work email"></div>
+      ${big?'<div class="field" style="max-width:340px;margin:0 auto"><input type="text" placeholder="Rough budget (optional)"></div>':''}
+      <button class="btn primary" style="margin-top:8px" onclick="alert('PROTOTYPE: submits a pre-filled quote request.')">Request my quote</button>
+      <div class="mock">Simulated: lead created in Zoho tagged <b>Fun · Quote</b>, pre-filled with everything above, sales confirms in minutes, not a discovery call.</div>
+      <button class="btn" style="margin-top:14px" onclick="prev()">← Change something</button>
+    </div>`;
+  }
+}
+
+/* ---------------- activity details modal ---------------- */
+function openModal(id){
+  const a=ACTIVITIES.find(x=>x.id===id);if(!a)return;
+  $("#mImg").innerHTML=`<img src="${a.img}" alt="${a.name}" referrerpolicy="no-referrer" onerror="this.remove()">`;
+  $("#mName").textContent=a.name;
+  $("#mDesc").textContent=a.desc;
+  const setLabel=a.set==="both"?"Indoor / Outdoor":a.set==="outdoor"?"Outdoor":"Indoor";
+  $("#mTags").innerHTML=`<span class="mtag">${setLabel}</span>`+(a.q?`<span class="mtag q">⚑ Enquiry only</span>`:`<span class="mtag ok">✓ Bookable online</span>`);
+  const link=$("#mLink"); link.href=a.url;
+  $("#mPick").onclick=()=>{state.activityId=id;state.combine=false;closeModal();renderStep();};
+  $("#modal").classList.add("show");
+}
+function closeModal(){$("#modal").classList.remove("show");}
+$("#modalX").onclick=closeModal;
+$("#modal").onclick=e=>{if(e.target.id==="modal")closeModal();};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
+
+renderStep();
+</script>
+</body>
+</html>
