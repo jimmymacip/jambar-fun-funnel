@@ -53,7 +53,7 @@
   .layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
   @media(max-width:820px){.layout{grid-template-columns:1fr}}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px;display:flex;flex-direction:column;min-height:540px}
   .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px}
   h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
   .sub{color:var(--ink-soft);margin:0 0 26px;font-size:17px}
@@ -65,6 +65,15 @@
   .opt .ic{width:54px;height:54px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
   .opt .ic svg{width:28px;height:28px;display:block}
   .opt.sel .ic{background:var(--primary);color:#fff}
+  .hint a{color:var(--primary);font-weight:600}
+  /* Venue Plus card with photo filling the right */
+  .venueopt{padding:0;overflow:hidden;align-items:stretch;gap:0}
+  .venueopt .otxt{padding:18px 20px;flex:1;justify-content:center;gap:4px}
+  .venueopt .venuepic{width:240px;flex-shrink:0;align-self:stretch;background:#eef2f7}
+  .venueopt .venuepic img{width:100%;height:100%;object-fit:cover;display:block}
+  .vlink{margin-top:9px;color:var(--primary);font-weight:700;font-size:14px;text-decoration:none;align-self:flex-start}
+  .vlink:hover{text-decoration:underline}
+  @media(max-width:560px){.venueopt .venuepic{width:120px}}
   .opt .otxt{display:flex;flex-direction:column;gap:3px}
   .opt .ok{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
   .opt .ot{font-weight:700;font-size:18px;display:block}
@@ -76,7 +85,7 @@
   .svccard{display:flex;flex-direction:column;text-align:left;border:1.5px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:.15s;font:inherit;color:inherit;padding:0}
   .svccard:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}
   .svccard.sel{border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
-  .svccard .pic{position:relative;width:100%;aspect-ratio:16/10;overflow:hidden;background:linear-gradient(135deg,#dbeafe,#d1fae5)}
+  .svccard .pic{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;background:linear-gradient(135deg,#dbeafe,#d1fae5)}
   .svccard .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .svccard .body{padding:24px 22px 28px}
   .svccard .ok{font-size:13px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
@@ -156,7 +165,7 @@
   .chip:hover{border-color:var(--primary)}
   .chip.sel{background:var(--primary-dark);border-color:var(--primary-dark);color:#fff}
 
-  .nav{display:flex;justify-content:space-between;margin-top:24px;gap:10px}
+  .nav{display:flex;justify-content:space-between;margin-top:auto;padding-top:28px;gap:10px}
   .btn{padding:15px 28px;border-radius:11px;border:1.5px solid var(--line);background:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;transition:.15s}
   .btn:hover{border-color:var(--ink-soft)}
   .btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
@@ -165,7 +174,7 @@
   .btn.primary:disabled{background:#cbd5e1;border-color:#cbd5e1;color:#fff;opacity:1}
 
   /* summary panel */
-  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;position:sticky;top:92px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;position:sticky;top:92px;min-height:440px}
   .panel h3{margin:0 0 16px;font-size:14px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-soft)}
   .srow{display:flex;justify-content:space-between;gap:10px;font-size:15px;padding:7px 0;border-bottom:1px dashed var(--line)}
   .srow .k{color:var(--ink-soft)}
@@ -521,13 +530,17 @@ function renderStep(){
       const vb=$("#venuebody");if(!vb)return;
       vb.innerHTML=`<div style="margin-top:22px"><label style="font-weight:700;font-size:15px">Where will the indoor event be?</label><div class="opts" style="margin-top:12px">
         ${optHTML("building","Your own venue / office","You provide the space. No venue cost, books online.",state.venue==="own")}
-        ${optHTML("pin","Venue Plus  ·  +S$750","A partner venue, half day. Books online.",state.venue==="plus")}
+        <div class="opt venueopt${state.venue==="plus"?" sel":""}" role="button" tabindex="0">
+          <span class="otxt"><span class="ot">Venue Plus  ·  +S$750</span><span class="od">A partner venue, half day. Books online.</span><a class="vlink" href="https://venue-plus.com" target="_blank" rel="noopener">See the venue ↗</a></span>
+          <span class="venuepic"><img src="venue-plus.jpg" alt="Venue Plus" referrerpolicy="no-referrer" onerror="this.parentNode.style.display='none'"></span>
+        </div>
         ${optHTML("search","Show me more venue options","We'll source options and quote them.",state.venue==="more")}
       </div></div>`;
       const v=vb.querySelectorAll(".opt");
       v[0].onclick=()=>{state.venue="own";renderStep();};
       v[1].onclick=()=>{state.venue="plus";renderStep();};
       v[2].onclick=()=>{state.venue="more";renderStep();};
+      const vl=vb.querySelector(".vlink"); if(vl)vl.onclick=e=>e.stopPropagation();
     }
   }
 
