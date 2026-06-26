@@ -126,11 +126,11 @@
   .field select{height:56px;border-radius:12px;padding:0 16px;font-size:16.5px;appearance:none;-webkit-appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-soft) 50%),linear-gradient(135deg,var(--ink-soft) 50%,transparent 50%);background-position:calc(100% - 18px) 24px,calc(100% - 12px) 24px;background-size:6px 6px,6px 6px;background-repeat:no-repeat}
 
   /* activity grid */
-  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;max-height:560px;overflow:auto;padding:4px;margin:-4px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;max-height:560px;overflow:auto;padding:4px;margin:-4px;align-content:start;grid-auto-rows:max-content}
   .act{border:1.5px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;background:#fff;transition:.15s;position:relative;display:flex;flex-direction:column}
   .act:hover{border-color:var(--primary);transform:translateY(-2px)}
   .act.sel{border-color:var(--primary-dark);box-shadow:0 0 0 3px var(--primary-soft)}
-  .act .ph{position:relative;aspect-ratio:1;overflow:hidden;background:linear-gradient(135deg,#dbeafe,#d1fae5)}
+  .act .ph{position:relative;height:150px;flex-shrink:0;overflow:hidden;background:linear-gradient(135deg,#dbeafe,#d1fae5)}
   .act .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
   .act .ph .fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8px;font-size:12px;font-weight:800;color:#1e40af;letter-spacing:.02em}
   .act .nm{padding:10px 12px 12px;font-size:14px;font-weight:700;line-height:1.25}
@@ -159,6 +159,11 @@
   .combine{margin-top:16px;border:1.5px dashed var(--line);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:#fff}
   .combine .ct{font-size:13.5px;color:var(--ink-soft)}
   .combine .ct b{color:var(--ink)}
+  .locbox{margin-top:20px;display:flex;align-items:center;gap:13px;border:1.5px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--primary-soft)}
+  .locbox .ic{width:44px;height:44px;border-radius:11px;background:#fff;color:var(--primary);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .locbox .ic svg{width:22px;height:22px}
+  .locbox .lt{font-size:12px;color:var(--ink-soft)}
+  .locbox .lv{font-weight:700;font-size:16px}
 
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{padding:9px 13px;border:1.5px solid var(--line);border-radius:999px;background:#fff;cursor:pointer;font-size:13.5px;font-weight:600;transition:.15s}
@@ -246,50 +251,51 @@
 const IMG="https://jambarteambuilding.com/wp-content/uploads";
 const SITE="https://jambarteambuilding.com/portfolio-item";
 const ACTIVITIES=[
- {id:1,name:"Are You Ready for AI?",set:"outdoor",q:false,img:`${IMG}/2026/04/2025.08.05-NUS-190-2-1-300x300.jpg`,url:`${SITE}/are-you-ready-for-ai/`,desc:"An immersive outdoor experience where teams use AI tools to solve real-world challenges across multiple stations."},
+ {id:1,name:"AI In the Wild!",set:"outdoor",q:false,loc:["Civic District","Marina Bay","Clarke Quay","Sentosa"],img:`${IMG}/2026/04/2025.08.05-NUS-190-2-1-300x300.jpg`,url:`${SITE}/are-you-ready-for-ai/`,desc:"An immersive outdoor experience where teams use AI tools to solve real-world challenges across multiple stations."},
  {id:2,name:"AI Murder Mystery",set:"indoor",q:true,loved:true,new2026:true,img:`${IMG}/2026/04/AI-Murder-Mystery-300x300.jpg`,url:`${SITE}/ai-murder-mystery-team-building-activity/`,desc:"A bespoke, interactive murder investigation powered by AI and built around your company culture."},
- {id:3,name:"The AI Collaboration Challenge",set:"indoor",q:false,img:`${IMG}/2026/02/The-AI-Collaboration-Challenge-300x300.jpg`,url:`${SITE}/ai-team-building-activity/`,desc:"A high-energy workshop that turns AI from a distant technology into an everyday thinking partner."},
- {id:4,name:"Space Command",set:"indoor",q:false,loved:true,new2026:true,img:`${IMG}/2026/04/Space-Command-Featured-Image-300x300.jpg`,url:`${SITE}/space-command-team-building-activity/`,desc:"A fast-paced simulation where teams become a starship command crew making high-stakes decisions in real time."},
- {id:5,name:"The Eco Heist",set:"indoor",q:false,img:`${IMG}/2026/03/The-Eco-Heist-300x300.jpg`,url:`${SITE}/eco-heist-team-building-activity/`,desc:"A puzzle-based race against the clock to solve clues and restore balance in a sustainability-themed mission."},
- {id:6,name:"Dome-ination Trail Challenge",set:"outdoor",q:false,img:`${IMG}/2025/06/Dome-ination-Trail-Challenge-Activity-Image-300x300.jpg`,url:`${SITE}/dome-ination-challenge/`,desc:"Gardens by the Bay becomes an adventure playground in an epic quest for discovery."},
- {id:7,name:"Sugar Rush (cake decorating)",set:"indoor",q:true,img:`${IMG}/2025/02/Sugar-Rush-Activity-Image.png`,url:`${SITE}/sugar-rush-cake-decoration-team-building/`,desc:"Teams decorate sheet cakes into edible masterpieces in a fun, sweet, creative competition."},
+ {id:3,name:"The 'More Than Meets the AI' Challenge",set:"indoor",q:false,img:`${IMG}/2026/02/The-AI-Collaboration-Challenge-300x300.jpg`,url:`${SITE}/ai-team-building-activity/`,desc:"A high-energy workshop that turns AI from a distant technology into an everyday thinking partner."},
+ {id:4,name:"Starbound",set:"indoor",q:false,loved:true,new2026:true,img:`${IMG}/2026/04/Space-Command-Featured-Image-300x300.jpg`,url:`${SITE}/space-command-team-building-activity/`,desc:"A fast-paced simulation where teams become a starship command crew making high-stakes decisions in real time."},
+ {id:6,name:"Dome-Ination Trail Challenge",set:"outdoor",q:false,loc:["Gardens by the Bay"],img:`${IMG}/2025/06/Dome-ination-Trail-Challenge-Activity-Image-300x300.jpg`,url:`${SITE}/dome-ination-challenge/`,desc:"Gardens by the Bay becomes an adventure playground in an epic quest for discovery."},
  {id:8,name:"Shark Tank",set:"indoor",q:false,img:`${IMG}/2024/01/Screenshot-2024-01-02-7.49.55-AM.png`,url:`${SITE}/shark-tank/`,desc:"An idea-generation and innovation workshop using the exciting Shark Tank format as inspiration."},
- {id:9,name:"The Big Picture (art jamming)",set:"indoor",q:true,img:`${IMG}/2021/02/2019-11-25-Jumbar-Team-Building-80-300x300.jpg`,url:`${SITE}/art-jamming/`,desc:"An art-jamming activity where each team's canvas combines into one big collective masterpiece."},
- {id:10,name:"Graffiti Art",set:"both",q:true,img:`${IMG}/2021/02/DzaaXDyU8AEUw2P-300x300.jpeg`,url:`${SITE}/graffiti-art/`,desc:"Create a unique graffiti masterpiece inspired by your company values, mission or conference theme."},
+ {id:9,name:"Art Jamming",set:"indoor",q:true,img:`${IMG}/2021/02/2019-11-25-Jumbar-Team-Building-80-300x300.jpg`,url:`${SITE}/art-jamming/`,desc:"An art-jamming activity where each team's canvas combines into one big collective masterpiece."},
+ {id:10,name:"Graffiti Art",set:"indoor",q:true,img:`${IMG}/2021/02/DzaaXDyU8AEUw2P-300x300.jpeg`,url:`${SITE}/graffiti-art/`,desc:"Create a unique graffiti masterpiece inspired by your company values, mission or conference theme."},
  {id:11,name:"SolarBuddy, Hour of Power (CSR)",set:"indoor",q:true,img:`${IMG}/2024/01/8.png`,url:`${SITE}/solar-buddy/`,desc:"A hands-on CSR/ESG program assembling solar lights to tackle energy poverty and bring values to life."},
- {id:12,name:"Lateral Thinking",set:"indoor",q:false,img:`${IMG}/2024/12/21118165_6427852-1030x1030.jpg`,url:`${SITE}/lateral-thinking/`,desc:"A creative problem-solving session that reframes challenges and explores unconsidered paths."},
- {id:13,name:"Breaking Barriers",set:"indoor",q:false,img:`${IMG}/2021/02/D1V2SNGVAAArdHs-300x300.jpeg`,url:`${SITE}/breaking-barriers/`,desc:"Identify, acknowledge and overcome the fears and insecurities holding the team back."},
  {id:14,name:"60 Seconds to Win It",set:"indoor",q:false,img:`${IMG}/2021/02/DopEBL0VAAA07ST-300x300.jpeg`,url:`${SITE}/60-seconds-to-win/`,desc:"Minute-long challenges using everyday items in surprising, unexpected ways, all in the name of fun."},
- {id:15,name:"The Virus Challenge",set:"indoor",q:false,img:`${IMG}/2019/10/Virus-02.jpg`,url:`${SITE}/virus-challenge/`,desc:"A board-game-based challenge where teams compete to save humanity from a deadly outbreak."},
- {id:16,name:"Bridging The Gap",set:"indoor",q:false,img:`${IMG}/2021/02/DxE9U-_UwAAhkhV-copy-300x300.jpeg`,url:`${SITE}/bridging-the-gap/`,desc:"Design and build a race track, then race remote-control cars in a mini Grand Prix."},
+ {id:15,name:"Virus",set:"indoor",q:false,img:`${IMG}/2019/10/Virus-02.jpg`,url:`${SITE}/virus-challenge/`,desc:"A board-game-based challenge where teams compete to save humanity from a deadly outbreak."},
+ {id:16,name:"Bridging the Gap",set:"indoor",q:false,img:`${IMG}/2021/02/DxE9U-_UwAAhkhV-copy-300x300.jpeg`,url:`${SITE}/bridging-the-gap/`,desc:"Design and build a race track, then race remote-control cars in a mini Grand Prix."},
  {id:17,name:"Murder Mystery",set:"indoor",q:false,img:`${IMG}/2021/02/rsz_do9qybxvaaetvfn-300x300.jpg`,url:`${SITE}/the-murder-mystery/`,desc:"A whodunit acted out with scripts and props, work together to solve the crime."},
- {id:18,name:"The Chain Reaction Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Dzu8t79U8AAf0oy-300x300.jpeg`,url:`${SITE}/the-chain-reaction-challenge/`,desc:"Build a topple paradise full of tricks, obstacles and creative planning."},
+ {id:18,name:"Chain Reaction",set:"indoor",q:false,img:`${IMG}/2021/02/Dzu8t79U8AAf0oy-300x300.jpeg`,url:`${SITE}/the-chain-reaction-challenge/`,desc:"Build a topple paradise full of tricks, obstacles and creative planning."},
  {id:19,name:"Change It Up",set:"indoor",q:false,img:`${IMG}/2021/02/DqQDK-GWkAEXesk-300x300.jpeg`,url:`${SITE}/change-it-up/`,desc:"Travel back to 14th-century Singapore and experience the lost art of friendly bartering."},
- {id:20,name:"The Domino Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/DsAiHfbVYAAV7xr-300x300.jpeg`,url:`${SITE}/the-domino-challenge/`,desc:"Meticulously build and trigger an epic domino chain reaction together."},
- {id:21,name:"Escape Room: Prison Break",set:"indoor",q:false,img:`${IMG}/2021/02/AB-Sciex-37-300x300.jpg`,url:`${SITE}/prison-break/`,desc:"An escape-room edition, crack the code to break out of an old abandoned prison before time runs out."},
- {id:22,name:"The Drone Challenge",set:"both",q:true,img:`${IMG}/2021/02/IMG_1600-300x300.jpg`,url:`${SITE}/the-drone-challenge/`,desc:"Plan and build obstacles, attend flight school, then race drones through a team-built course."},
- {id:23,name:"The Casino Heist",set:"indoor",q:false,loved:true,img:`${IMG}/2021/02/ITS-64-300x300.jpg`,url:`${SITE}/casino-heist/`,desc:"A number-crunching, puzzle-solving strategy game with a casino-heist twist."},
+ {id:20,name:"Domino Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/DsAiHfbVYAAV7xr-300x300.jpeg`,url:`${SITE}/the-domino-challenge/`,desc:"Meticulously build and trigger an epic domino chain reaction together."},
+ {id:21,name:"Escape The Room: Prison Break",set:"indoor",q:false,img:`${IMG}/2021/02/AB-Sciex-37-300x300.jpg`,url:`${SITE}/prison-break/`,desc:"An escape-room edition, crack the code to break out of an old abandoned prison before time runs out."},
+ {id:22,name:"Drone Challenge",set:"indoor",q:true,img:`${IMG}/2021/02/IMG_1600-300x300.jpg`,url:`${SITE}/the-drone-challenge/`,desc:"Plan and build obstacles, attend flight school, then race drones through a team-built course."},
+ {id:23,name:"Escape Room: Casino Heist",set:"indoor",q:false,loved:true,img:`${IMG}/2021/02/ITS-64-300x300.jpg`,url:`${SITE}/casino-heist/`,desc:"A number-crunching, puzzle-solving strategy game with a casino-heist twist."},
  {id:24,name:"Deadline",set:"indoor",q:false,img:`${IMG}/2021/02/Singtel-32-300x300.jpg`,url:`${SITE}/deadline/`,desc:"A strategy game mastering the procurement, transportation and production of goods."},
- {id:25,name:"The Creative Putting Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Silver-Bullet-77-300x300.jpg`,url:`${SITE}/creative-putting-challenge/`,desc:"Against the clock, design and build a playable mini-putt hole from the materials provided."},
- {id:26,name:"The Tailor (agile/scrum)",set:"indoor",q:false,img:`${IMG}/2021/02/2019-11-05-Jambar-Team-Building-51-300x300.jpg`,url:`${SITE}/the-tailor/`,desc:"A Scrum-methodology simulation showing what it really means to be agile in a changing environment."},
- {id:27,name:"The Fashion Show Game",set:"indoor",q:false,img:`${IMG}/2021/02/Alimak-Group-176-300x300.jpg`,url:`${SITE}/fashion-show-game/`,desc:"A trivia-fuelled fashion quiz, then design outfits and strut them in a wild fashion show."},
- {id:28,name:"Singapore Heritage Trail",set:"outdoor",q:false,img:`${IMG}/2020/10/DpwNpMGU4AAWhVC-300x300.jpeg`,url:`${SITE}/singapore-heritage-trial/`,desc:"Discover the Lion City through culture-based challenges built around local traditions."},
- {id:29,name:"The Wild Goats Challenge",set:"outdoor",q:false,loved:true,img:`${IMG}/2021/01/DslgINyV4AAu-nI-300x300.jpeg`,url:`${SITE}/the-wild-goats-challenge/`,desc:"The fun, stimulating and occasionally ridiculous digital challenge that built Jambar's reputation."},
- {id:30,name:"The Running Man Challenge",set:"outdoor",q:false,img:`${IMG}/2021/01/DyxF47MUcAErbXL-300x298.jpeg`,url:`${SITE}/the-running-man-challenge/`,desc:"The South Korean game-show hit brought to Singapore with collaborative bonding challenges."},
- {id:31,name:"Are You App For the Hunt?",set:"outdoor",q:false,img:`${IMG}/2021/01/Screen-Shot-2021-01-27-at-4.33.01-PM-300x300.png`,url:`${SITE}/are-you-app-for-the-hunt/`,desc:"A tech-based hunt that eases change management and adapts teams to new technologies."},
- {id:32,name:"The Amazing Race Challenge",set:"outdoor",q:false,loved:true,img:`${IMG}/2021/02/DsBeY4HVAAEjJ_0-300x300.jpeg`,url:`${SITE}/amazing-race/`,desc:"Race between checkpoints across the city, expect exciting roadblocks and detours as you finish first."},
- {id:33,name:"Treasure Hunt",set:"outdoor",q:false,img:`${IMG}/2024/11/Dxj1g7vVsAA0amA-1030x1030.jpg`,url:`${SITE}/treasure-hunt/`,desc:"A map-led hunt for hidden treasure using clues based on Singapore's architecture and monuments."},
- {id:34,name:"Bicycle Scavenger Hunt",set:"outdoor",q:true,img:`${IMG}/2021/02/AXA-58-300x300.jpg`,url:`${SITE}/bicycle-scavenger-hunt/`,desc:"Cycle between checkpoints tackling tests of strength, willpower and brainteasers."},
- {id:35,name:"Cardboard Boat Challenge",set:"outdoor",q:true,img:`${IMG}/2021/02/DrYIHdhU8AEPDVf-300x300.jpeg`,url:`${SITE}/cardboard-boat-building-challenge/`,desc:"Build a boat from limited materials, then race it in a wild, watery finale."},
- {id:36,name:"Collaborate!",set:"both",q:false,img:`${IMG}/2021/02/DsFmnZTV4AAfA-m-300x300.jpeg`,url:`${SITE}/collaborate/`,desc:"A mission-rich activity with a twist: competing teams must cooperate via tablets to maximise scores."},
- {id:37,name:"Beach Olympics",set:"outdoor",q:true,img:`${IMG}/2021/02/Dr8mAQ4VsAAFuCF-300x300.jpeg`,url:`${SITE}/beach-olympics/`,desc:"Gold-medal team bonding on Singapore's shores with a series of lighthearted beachside competitions."},
- {id:38,name:"The F1 Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Dpl8xibUUAU3Bb--300x300.jpeg`,url:`${SITE}/the-f1-challenge/`,desc:"Craft custom cars, create your champions' chant, then race them to leave the competition in the dust."},
- {id:39,name:"Discover Singapore",set:"outdoor",q:false,img:`${IMG}/2021/02/DphsT4OUYAAaf9P-300x300.jpeg`,url:`${SITE}/discover-singapore/`,desc:"Move from landmark to landmark solving puzzles and discovering Singapore along the way."},
- {id:40,name:"Interactive 100 Challenge",set:"outdoor",q:false,loved:true,hidden:true,img:"",url:"https://jambarteambuilding.com/",desc:"Teams move between physical and mental challenges, planning their route to reach exactly 100 points, no more, no less."}
+ {id:25,name:"Putting Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Silver-Bullet-77-300x300.jpg`,url:`${SITE}/creative-putting-challenge/`,desc:"Against the clock, design and build a playable mini-putt hole from the materials provided."},
+ {id:26,name:"The Tailor",set:"indoor",q:false,img:`${IMG}/2021/02/2019-11-05-Jambar-Team-Building-51-300x300.jpg`,url:`${SITE}/the-tailor/`,desc:"A Scrum-methodology simulation showing what it really means to be agile in a changing environment."},
+ {id:27,name:"Fashion Show",set:"indoor",q:false,img:`${IMG}/2021/02/Alimak-Group-176-300x300.jpg`,url:`${SITE}/fashion-show-game/`,desc:"A trivia-fuelled fashion quiz, then design outfits and strut them in a wild fashion show."},
+ {id:28,name:"Heritage Trail",set:"outdoor",q:false,loc:["Little India","Chinatown","Arab Street"],img:`${IMG}/2020/10/DpwNpMGU4AAWhVC-300x300.jpeg`,url:`${SITE}/singapore-heritage-trial/`,desc:"Discover the Lion City through culture-based challenges built around local traditions."},
+ {id:29,name:"Wild Goats",set:"outdoor",q:false,loved:true,loc:["Civic District","Marina Bay","Clarke Quay","Sentosa"],img:`${IMG}/2021/01/DslgINyV4AAu-nI-300x300.jpeg`,url:`${SITE}/the-wild-goats-challenge/`,desc:"The fun, stimulating and occasionally ridiculous digital challenge that built Jambar's reputation."},
+ {id:30,name:"Running Man",set:"outdoor",q:false,loc:["Sentosa","Clarke Quay"],img:`${IMG}/2021/01/DyxF47MUcAErbXL-300x298.jpeg`,url:`${SITE}/the-running-man-challenge/`,desc:"The South Korean game-show hit brought to Singapore with collaborative bonding challenges."},
+ {id:32,name:"Amazing Race",set:"outdoor",q:false,loved:true,loc:["Civic District","Marina Bay","Clarke Quay","Sentosa"],img:`${IMG}/2021/02/DsBeY4HVAAEjJ_0-300x300.jpeg`,url:`${SITE}/amazing-race/`,desc:"Race between checkpoints across the city, expect exciting roadblocks and detours as you finish first."},
+ {id:33,name:"Treasure Hunt",set:"outdoor",q:false,loc:["Civic District","Marina Bay","Clarke Quay","Sentosa"],img:`${IMG}/2024/11/Dxj1g7vVsAA0amA-1030x1030.jpg`,url:`${SITE}/treasure-hunt/`,desc:"A map-led hunt for hidden treasure using clues based on Singapore's architecture and monuments."},
+ {id:34,name:"Bicycle Scaventures Hunt",set:"outdoor",q:true,loc:["East Coast Park","Punggol Waterway"],img:`${IMG}/2021/02/AXA-58-300x300.jpg`,url:`${SITE}/bicycle-scavenger-hunt/`,desc:"Cycle between checkpoints tackling tests of strength, willpower and brainteasers."},
+ {id:35,name:"Cardboard Boat Challenge",set:"outdoor",q:true,loc:["Sentosa"],img:`${IMG}/2021/02/DrYIHdhU8AEPDVf-300x300.jpeg`,url:`${SITE}/cardboard-boat-building-challenge/`,desc:"Build a boat from limited materials, then race it in a wild, watery finale."},
+ {id:36,name:"Collaborate!",set:"outdoor",q:false,loc:["Civic District","Marina Bay","Clarke Quay","Sentosa"],img:`${IMG}/2021/02/DsFmnZTV4AAfA-m-300x300.jpeg`,url:`${SITE}/collaborate/`,desc:"A mission-rich activity with a twist: competing teams must cooperate via tablets to maximise scores."},
+ {id:37,name:"Beach Olympics",set:"outdoor",q:true,loc:["Sentosa"],img:`${IMG}/2021/02/Dr8mAQ4VsAAFuCF-300x300.jpeg`,url:`${SITE}/beach-olympics/`,desc:"Gold-medal team bonding on Singapore's shores with a series of lighthearted beachside competitions."},
+ {id:38,name:"Formula 1 (F1) Challenge",set:"indoor",q:false,img:`${IMG}/2021/02/Dpl8xibUUAU3Bb--300x300.jpeg`,url:`${SITE}/the-f1-challenge/`,desc:"Craft custom cars, create your champions' chant, then race them to leave the competition in the dust."},
+ {id:39,name:"Discover Singapore",set:"outdoor",q:false,loc:["Civic District","Marina Bay","Clarke Quay","Sentosa"],img:`${IMG}/2021/02/DphsT4OUYAAaf9P-300x300.jpeg`,url:`${SITE}/discover-singapore/`,desc:"Move from landmark to landmark solving puzzles and discovering Singapore along the way."},
+ {id:40,name:"Interactive 100 Challenge",set:"outdoor",q:false,loved:true,hidden:true,loc:["Civic District","Marina Bay","Clarke Quay","Sentosa"],img:"",url:"https://jambarteambuilding.com/",desc:"Teams move between physical and mental challenges, planning their route to reach exactly 100 points, no more, no less."},
+ {id:41,name:"We Can Sell It",set:"indoor",q:false,img:"",url:"https://jambarteambuilding.com/",desc:"Teams brainstorm and pitch three marketing campaigns across print, radio and TV, building storytelling, presentation and collaboration."},
+ {id:42,name:"Bunker Link",set:"outdoor",q:false,loc:["Marina Bay"],img:"",url:"https://jambarteambuilding.com/",desc:"Complete challenges across Marina Central and its underground connections, racing to earn the top score while staying cool and dry."},
+ {id:43,name:"The Indoor Creative Challenge",set:"indoor",q:false,img:"",url:"https://jambarteambuilding.com/portfolio-item/indoor-creative-challenge/",desc:"Using digital gameplay and elements of AI, jump into this challenge full of fun and creativity."},
+ {id:44,name:"Lego Serious Play",set:"indoor",q:true,img:"",url:"https://jambarteambuilding.com/",desc:"Transform teamwork through play, unlocking clarity, connection and collaboration with every brick."},
+ {id:45,name:"Samsui Woman",set:"outdoor",q:false,loc:["Arab Street","Chinatown","Little India"],img:"",url:"https://jambarteambuilding.com/",desc:"A collaborative activity built around the history of the Samsui Women, collecting clues at local cultural sites."},
+ {id:46,name:"Hawker Food Heroes",set:"outdoor",q:false,loc:["Marina Bay","Chinatown"],img:"",url:"https://jambarteambuilding.com/",desc:"A thrilling exploration of Singapore's hawker culture, finding, sampling and racing between local food spots."}
 ];
 
 const RATE=65, MIN=1200, CAP=30, VOL=100, WATER=3, VENUE=750;
-const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,activityId:null,combine:false,duration:"half",extras:[]};
+const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,location:null,activityId:null,combine:false,duration:"half",extras:[]};
 
 /* steps in the self-serve flow */
 const STEPS=["purpose","headcount","date","setting","activity","duration","extras","route"];
@@ -342,7 +348,7 @@ function flags(){
   if(state.headcount>CAP) f.push(state.headcount>=VOL?"Large event · volume pricing":"Large group (31+ pax)");
   if(state.rush) f.push("Rush event (under 1 week)");
   if(state.hold) f.push("Holding multiple dates");
-  if(state.setting==="outdoor-custom") f.push("Custom location");
+  if(state.location==="custom") f.push("Custom location");
   if(state.setting==="indoor"&&state.venue==="more") f.push("More venue options");
   const a=activity(); if(a&&a.q) f.push("Premium / materials activity");
   if(state.combine) f.push("Combining multiple activities");
@@ -373,6 +379,7 @@ function renderPanel(){
   add("Setting", state.setting?state.setting.replace("-"," · "):"");
   if(state.setting==="indoor") add("Venue", venueLabel());
   add("Activity", a?a.name:(state.combine?"Combining multiple":""));
+  if(state.setting==="outdoor"&&state.location) add("Location", state.location==="custom"?"Custom (quote)":state.location);
   add("Duration", state.duration==="full"?"Full day":(stepIdx>=5?"Half day":""));
   add("Extras", state.extras.length?state.extras.join(", "):(stepIdx>=6?"None":""));
 
@@ -394,6 +401,7 @@ function optHTML(ic,t,d,sel){return `<button class="opt${sel?" sel":""}"><span c
 
 function renderStep(){
   if(terminal){renderTerminal();return;}
+  syncLocation();
   renderProgress();renderPanel();
   const s=STEPS[stepIdx];const st=$("#stage");
   let html="";
@@ -445,7 +453,7 @@ function renderStep(){
 
   else if(s==="date"){
     const minDate=new Date(Date.now()+7*864e5).toISOString().split("T")[0];
-    html=`<div class="card"><p class="step-k">Step 3 of 7</p><h1>When's the event?</h1><p class="sub">You're always available, so it comes down to how settled your dates are.</p>
+    html=`<div class="card"><p class="step-k">Step 3 of 7</p><h1>When's the event?</h1><p class="sub">We can run any date, so it just comes down to how settled your plans are.</p>
     <div class="opts">
       ${optHTML("calendar","I have my date(s)","One date, or a few specific options to choose from.",state.dateMode==="specific")}
       ${optHTML("month","I only know the rough month","A target month, no specific day yet.",state.dateMode==="month")}
@@ -476,7 +484,7 @@ function renderStep(){
         // mark selected book button
         if(state.date&&!state.hold){/* handled below via class injection */}
       }
-      dp.innerHTML=inputs+addBtn+pick+`<div class="hint" style="margin-top:14px">Online booking needs at least 1 week's notice. Sooner? <a href="#" id="rushlink">Request a quick quote →</a></div>`;
+      dp.innerHTML=inputs+addBtn+pick;
       dp.querySelectorAll(".fpick").forEach(inp=>{
         if(window.flatpickr){
           flatpickr(inp,{minDate:minDate,dateFormat:"Y-m-d",altInput:true,altFormat:"j M Y",disableMobile:true,defaultDate:inp.value||null,
@@ -495,7 +503,6 @@ function renderStep(){
         btn.onclick=()=>{state.date=btn.dataset.book;state.hold=false;renderStep();};
       });
       const hb=dp.querySelector("[data-hold]");if(hb)hb.onclick=()=>{state.hold=true;state.date="";renderStep();};
-      const rl=$("#rushlink");if(rl)rl.onclick=ev=>{ev.preventDefault();state.rush=true;next();};
     }
 
     function buildMonth(){
@@ -515,15 +522,13 @@ function renderStep(){
     html=`<div class="card"><p class="step-k">Step 4 of 7</p><h1>Indoor or outdoor?</h1><p class="sub">This filters the activities you'll see next.</p>
     <div class="opts">
       ${optHTML("building","Indoor","Hotel function room, conference space or your office.",state.setting==="indoor")}
-      ${optHTML("leaf","Outdoor, a standard location","Gardens by the Bay, Sentosa, Clarke Quay.",state.setting==="outdoor-standard")}
-      ${optHTML("pin","Outdoor, a specific or custom location","Somewhere of your choice, we'll quote it.",state.setting==="outdoor-custom")}
+      ${optHTML("leaf","Outdoor","A park, the city or the beach. You'll pick the exact spot with your activity.",state.setting==="outdoor")}
     </div>
     <div id="venuebody"></div></div>`;
     st.innerHTML=html;
     const b=st.querySelectorAll(".opt");
-    b[0].onclick=()=>{state.setting="indoor";clearActivityIfHidden();renderStep();};
-    b[1].onclick=()=>{state.setting="outdoor-standard";state.venue=null;clearActivityIfHidden();renderStep();};
-    b[2].onclick=()=>{state.setting="outdoor-custom";state.venue=null;clearActivityIfHidden();renderStep();};
+    b[0].onclick=()=>{state.setting="indoor";state.location=null;clearActivityIfHidden();renderStep();};
+    b[1].onclick=()=>{state.setting="outdoor";state.venue=null;state.location=null;clearActivityIfHidden();renderStep();};
     addNav();
     if(state.setting==="indoor")buildVenue();
 
@@ -552,6 +557,7 @@ function renderStep(){
     <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span></div>
     <div class="grid" id="grid"></div>
     <div class="combine"><div class="ct"><b>Want to combine a few activities or run a full day?</b><br>That's a tailored day, we'll design it with you.</div><button class="btn" id="combineCta">Tailor it for me →</button></div>
+    <div id="locbody"></div>
     </div>`;
     st.innerHTML=html;
     const g=$("#grid");
@@ -567,7 +573,18 @@ function renderStep(){
       g.appendChild(d);
     });
     $("#combineCta").onclick=()=>{state.combine=true;state.activityId=null;next();};
+    syncLocation();buildLocation();
     addNav();
+
+    function buildLocation(){
+      const lb=$("#locbody");if(!lb)return;
+      const a=activity();
+      if(state.setting!=="outdoor"||!a||!a.loc){lb.innerHTML="";return;}
+      if(a.loc.length===1){lb.innerHTML=`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Where in Singapore</div><div class="lv">Held at ${a.loc[0]}</div></div></div>`;return;}
+      const chips=a.loc.map(L=>`<div class="chip${state.location===L?" sel":""}" data-l="${L}">${L}</div>`).join("")+`<div class="chip${state.location==="custom"?" sel":""}" data-l="custom">Somewhere else (we'll quote)</div>`;
+      lb.innerHTML=`<div style="margin-top:20px"><label style="font-weight:700;font-size:15px">Where in Singapore?</label><div class="chips" style="margin-top:10px">${chips}</div></div>`;
+      lb.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{state.location=c.dataset.l;renderStep();});
+    }
   }
 
   else if(s==="duration"){
@@ -607,6 +624,12 @@ function renderStep(){
   }
 }
 
+function syncLocation(){
+  const a=activity();
+  if(state.setting!=="outdoor"||!a||!a.loc){state.location=null;return;}
+  if(a.loc.length===1){state.location=a.loc[0];return;}
+  if(state.location!=="custom"&&!a.loc.includes(state.location))state.location=null;
+}
 function clearActivityIfHidden(){
   const a=activity();
   if(a && !filteredActivities().some(x=>x.id===a.id)) state.activityId=null;
@@ -632,7 +655,13 @@ function canAdvance(){
   const s=STEPS[stepIdx];
   if(s==="date") return state.dateMode==="specific" && (!!state.date || state.hold);
   if(s==="setting") return !!state.setting && (state.setting!=="indoor" || !!state.venue);
-  if(s==="activity") return !!state.activityId || state.combine;
+  if(s==="activity"){
+    if(state.combine) return true;
+    if(!state.activityId) return false;
+    const a=activity();
+    if(state.setting==="outdoor"&&a&&a.loc) return !!state.location;
+    return true;
+  }
   return true;
 }
 function next(){if(stepIdx<STEPS.length-1){stepIdx++;renderStep();window.scrollTo({top:0,behavior:"smooth"});}}
@@ -766,6 +795,7 @@ function renderRoute(){
     <div class="srow"><span class="k">Setting</span><span class="v">${state.setting.replace("-"," · ")}</span></div>
     ${state.setting==="indoor"?`<div class="srow"><span class="k">Venue</span><span class="v">${venueLabel()}</span></div>`:""}
     <div class="srow"><span class="k">Activity</span><span class="v">${a?a.name:(state.combine?"Combining multiple, to design":"-")}</span></div>
+    ${state.setting==="outdoor"&&state.location?`<div class="srow"><span class="k">Location</span><span class="v">${state.location==="custom"?"Custom (quote)":state.location}</span></div>`:""}
     <div class="srow"><span class="k">Duration</span><span class="v">${state.duration==="full"?"Full day":"Half day"}</span></div>
     <div class="srow"><span class="k">Extras</span><span class="v">${state.extras.length?state.extras.join(", "):"None"}</span></div>
   </div>`;
