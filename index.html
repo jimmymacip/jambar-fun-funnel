@@ -53,7 +53,8 @@
   .layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
   @media(max-width:820px){.layout{grid-template-columns:1fr}}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px;display:flex;flex-direction:column;min-height:620px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px;display:flex;flex-direction:column;min-height:700px}
+  .card.outcome{display:block;min-height:0;height:auto}
   .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px}
   h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
   .sub{color:var(--ink-soft);margin:0 0 26px;font-size:17px}
@@ -295,10 +296,10 @@ const ACTIVITIES=[
 ];
 
 const RATE=65, MIN=1200, CAP=30, VOL=100, WATER=3, VENUE=750;
-const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,location:null,activityId:null,combine:false,duration:"half",extras:[]};
+const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,location:null,activities:[],combine:false,duration:"half",extras:[]};
 
 /* steps in the self-serve flow */
-const STEPS=["purpose","headcount","date","setting","activity","duration","extras","route"];
+const STEPS=["purpose","headcount","date","duration","setting","activity","extras","route"];
 let stepIdx=0;
 let terminal=null; // 'growth' | 'nurture'
 
@@ -329,7 +330,9 @@ function waterCost(){return state.extras.includes("Water")?WATER*state.headcount
 function venueCost(){return (state.setting==="indoor"&&state.venue==="plus")?VENUE:0;}
 function venueLabel(){return state.venue==="own"?"Own venue":state.venue==="plus"?"Venue Plus (+S$750)":state.venue==="more"?"More options (quote)":"";}
 
-function activity(){return ACTIVITIES.find(a=>a.id===state.activityId);}
+function activity(){return ACTIVITIES.find(a=>a.id===state.activities[0]);}
+function selActs(){return state.activities.map(id=>ACTIVITIES.find(a=>a.id===id)).filter(Boolean);}
+function actNames(){const a=selActs();return a.length?a.map(x=>x.name).join(" + "):"";}
 
 function dateLabel(){
   if(state.rush) return "Rush, under 1 wk";
@@ -350,7 +353,7 @@ function flags(){
   if(state.hold) f.push("Holding multiple dates");
   if(state.location==="custom") f.push("Custom location");
   if(state.setting==="indoor"&&state.venue==="more") f.push("More venue options");
-  const a=activity(); if(a&&a.q) f.push("Premium / materials activity");
+  if(selActs().some(a=>a.q)) f.push("Premium / materials activity");
   if(state.combine) f.push("Combining multiple activities");
   const bespoke=state.extras.filter(e=>e!=="Water");
   if(bespoke.length) f.push("Add-ons: "+bespoke.join(", "));
@@ -378,7 +381,7 @@ function renderPanel(){
   add("Date", dateLabel());
   add("Setting", state.setting?state.setting.replace("-"," · "):"");
   if(state.setting==="indoor") add("Venue", venueLabel());
-  add("Activity", a?a.name:(state.combine?"Combining multiple":""));
+  add("Activity", actNames()||(state.combine?"Combining multiple":""));
   if(state.setting==="outdoor"&&state.location) add("Location", state.location==="custom"?"Custom (quote)":state.location);
   add("Duration", state.duration==="full"?"Full day":(stepIdx>=5?"Half day":""));
   add("Extras", state.extras.length?state.extras.join(", "):(stepIdx>=6?"None":""));
@@ -407,7 +410,7 @@ function renderStep(){
   let html="";
 
   if(s==="purpose"){
-    html=`<div class="card"><p class="step-k">Step 1 of 7</p><h1>What's this team day for?</h1>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>What's this team day for?</h1>
     <div class="svc">
       <button class="svccard${state.purpose==="Team Building for Fun"?" sel":""}">
         <span class="pic"><img src="fun.jpg" alt="Team Building for Fun" referrerpolicy="no-referrer" onerror="this.remove()"></span>
@@ -431,7 +434,7 @@ function renderStep(){
     else if(pax<VOL) banner=`⚑ Over ${CAP} pax, we'll keep configuring then tailor a quote (no instant checkout for larger groups).`;
     else banner=`⚑ Large event, volume pricing. We regularly run 500&ndash;1000 pax events, we'll tailor pricing and logistics for you.`;
     const chips=[10,20,30,50,100,200];
-    html=`<div class="card"><p class="step-k">Step 2 of 7</p><h1>How many people?</h1><p class="sub">Up to ${CAP} pax can book online instantly. Larger groups get a tailored quote, and big events get volume pricing.</p>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>How many people?</h1><p class="sub">Up to ${CAP} pax can book online instantly. Larger groups get a tailored quote, and big events get volume pricing.</p>
     <div class="count">
       <button id="minus" aria-label="decrease">&minus;</button>
       <input id="paxInput" class="paxin" type="number" min="1" inputmode="numeric" value="${pax}">
@@ -453,7 +456,7 @@ function renderStep(){
 
   else if(s==="date"){
     const minDate=new Date(Date.now()+7*864e5).toISOString().split("T")[0];
-    html=`<div class="card"><p class="step-k">Step 3 of 7</p><h1>When's the event?</h1><p class="sub">We can run any date, so it just comes down to how settled your plans are.</p>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>When's the event?</h1><p class="sub">We can run any date, so it just comes down to how settled your plans are.</p>
     <div class="opts">
       ${optHTML("calendar","I have my date(s)","One date, or a few specific options to choose from.",state.dateMode==="specific")}
       ${optHTML("month","I only know the rough month","A target month, no specific day yet.",state.dateMode==="month")}
@@ -519,7 +522,7 @@ function renderStep(){
   }
 
   else if(s==="setting"){
-    html=`<div class="card"><p class="step-k">Step 4 of 7</p><h1>Indoor or outdoor?</h1><p class="sub">This filters the activities you'll see next.</p>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Indoor or outdoor?</h1><p class="sub">This filters the activities you'll see next.</p>
     <div class="opts">
       ${optHTML("building","Indoor","Hotel function room, conference space or your office.",state.setting==="indoor")}
       ${optHTML("leaf","Outdoor","A park, the city or the beach. You'll pick the exact spot with your activity.",state.setting==="outdoor")}
@@ -552,34 +555,47 @@ function renderStep(){
 
   else if(s==="activity"){
     const list=filteredActivities();
-    html=`<div class="card"><p class="step-k">Step 5 of 7</p><h1>Pick your activity</h1>
-    <p class="sub">Price stays the same whichever you choose, pick on fun, not cost. Facilitator always included.</p>
-    <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span></div>
+    const full=state.duration==="full";
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>${full?"Pick your activities":"Pick your activity"}</h1>
+    <p class="sub">${full?"A full day fits up to two activities. Pick one or two and we'll tailor the day, then send a quote. Facilitator always included.":"Price stays the same whichever you choose, pick on fun, not cost. Facilitator always included."}</p>
+    <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span>${full?` · <b id="selcount">${state.activities.length}/2 selected</b>`:""}</div>
     <div class="grid" id="grid"></div>
-    <div class="combine"><div class="ct"><b>Want to combine a few activities or run a full day?</b><br>That's a tailored day, we'll design it with you.</div><button class="btn" id="combineCta">Tailor it for me →</button></div>
+    ${full?"":`<div class="combine"><div class="ct"><b>Want to combine a few activities or run a full day?</b><br>That's a tailored day, we'll design it with you.</div><button class="btn" id="combineCta">Tailor it for me →</button></div>`}
     <div id="locbody"></div>
     </div>`;
     st.innerHTML=html;
     const g=$("#grid");
     list.forEach(a=>{
       const d=document.createElement("div");
-      d.className="act"+(state.activityId===a.id?" sel":"");
-      d.innerHTML=`<div class="ph"><span class="fallback">${a.name}</span><img src="${a.img}" alt="${a.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()"><button class="info" title="View details" aria-label="View details">i</button></div>
+      d.dataset.id=a.id;
+      const seld=state.activities.includes(a.id);
+      d.className="act"+(seld?" sel":"");
+      d.innerHTML=`<div class="ph"><span class="fallback">${a.name}</span>${a.img?`<img src="${a.img}" alt="${a.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:""}<button class="info" title="View details" aria-label="View details">i</button></div>
         ${a.q?'<span class="bdg q">⚑ Enquire</span>':''}
-        ${state.activityId===a.id?'<span class="bdg s">✓ Selected</span>':''}
+        <span class="bdg s" style="display:${seld?'block':'none'}">✓ Selected</span>
         <div class="nm">${a.name}</div>`;
-      d.onclick=()=>{state.activityId=a.id;state.combine=false;renderStep();};
+      d.onclick=()=>pickActivity(a.id);
       d.querySelector(".info").onclick=e=>{e.stopPropagation();openModal(a.id);};
       g.appendChild(d);
     });
-    $("#combineCta").onclick=()=>{state.combine=true;state.activityId=null;next();};
+    const cc=$("#combineCta");if(cc)cc.onclick=()=>{state.combine=true;state.activities=[];next();};
     syncLocation();buildLocation();
     addNav();
+
+    function pickActivity(id){
+      if(full){const i=state.activities.indexOf(id);if(i>=0)state.activities.splice(i,1);else if(state.activities.length<2)state.activities.push(id);}
+      else {state.activities=[id];}
+      state.combine=false; syncLocation();
+      g.querySelectorAll(".act").forEach(d=>{const sd=state.activities.includes(+d.dataset.id);d.classList.toggle("sel",sd);const b=d.querySelector(".bdg.s");if(b)b.style.display=sd?"block":"none";});
+      const sc=$("#selcount");if(sc)sc.textContent=state.activities.length+"/2 selected";
+      buildLocation();renderPanel();
+      const f=$("#fwd");if(f)f.disabled=!canAdvance();
+    }
 
     function buildLocation(){
       const lb=$("#locbody");if(!lb)return;
       const a=activity();
-      if(state.setting!=="outdoor"||!a||!a.loc){lb.innerHTML="";return;}
+      if(state.duration==="full"||state.setting!=="outdoor"||!a||!a.loc){lb.innerHTML="";return;}
       if(a.loc.length===1){lb.innerHTML=`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Where in Singapore</div><div class="lv">Held at ${a.loc[0]}</div></div></div>`;return;}
       const chips=a.loc.map(L=>`<div class="chip${state.location===L?" sel":""}" data-l="${L}">${L}</div>`).join("")+`<div class="chip${state.location==="custom"?" sel":""}" data-l="custom">Somewhere else (we'll quote)</div>`;
       lb.innerHTML=`<div style="margin-top:20px"><label style="font-weight:700;font-size:15px">Where in Singapore?</label><div class="chips" style="margin-top:10px">${chips}</div></div>`;
@@ -588,21 +604,21 @@ function renderStep(){
   }
 
   else if(s==="duration"){
-    html=`<div class="card"><p class="step-k">Step 6 of 7</p><h1>Half day or full day?</h1><p class="sub">Most Fun events are half-day. Full day becomes a tailored quote.</p>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Half day or full day?</h1><p class="sub">Most Fun events are half-day. Full day becomes a tailored quote.</p>
     <div class="opts">
       ${optHTML("clock","Half day","2 to 3.5 hrs. Books online instantly.",state.duration==="half")}
       ${optHTML("sun","Full day","A bigger programme, we'll quote it.",state.duration==="full")}
     </div></div>`;
     st.innerHTML=html;
     const b=st.querySelectorAll(".opt");
-    b[0].onclick=()=>{state.duration="half";renderStep();};
-    b[1].onclick=()=>{state.duration="full";renderStep();};
+    b[0].onclick=()=>{state.duration="half";if(state.activities.length>1)state.activities=state.activities.slice(0,1);renderStep();};
+    b[1].onclick=()=>{state.duration="full";state.combine=false;renderStep();};
     addNav();
   }
 
   else if(s==="extras"){
     const opts=[{v:"Water",l:"Water +S$3/pax"},{v:"Catering / F&B",l:"Catering / F&B"},{v:"Transport",l:"Transport"}];
-    html=`<div class="card"><p class="step-k">Step 7 of 7</p><h1>Add anything extra?</h1><p class="sub">Pick none (or just water) and you're ready to book. Water is a 600ml bottle per person. Catering or transport need a human, so they route to a quote.</p>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Add anything extra?</h1><p class="sub">Pick none (or just water) and you're ready to book. Water is a 600ml bottle per person. Catering or transport need a human, so they route to a quote.</p>
     <div class="chips" id="chips">
       <div class="chip${state.extras.length===0?" sel":""}" data-x="__none">None</div>
       ${opts.map(o=>`<div class="chip${state.extras.includes(o.v)?" sel":""}" data-x="${o.v}">${o.l}</div>`).join("")}
@@ -626,13 +642,13 @@ function renderStep(){
 
 function syncLocation(){
   const a=activity();
-  if(state.setting!=="outdoor"||!a||!a.loc){state.location=null;return;}
+  if(state.duration==="full"||state.setting!=="outdoor"||!a||!a.loc){state.location=null;return;}
   if(a.loc.length===1){state.location=a.loc[0];return;}
   if(state.location!=="custom"&&!a.loc.includes(state.location))state.location=null;
 }
 function clearActivityIfHidden(){
-  const a=activity();
-  if(a && !filteredActivities().some(x=>x.id===a.id)) state.activityId=null;
+  const vis=filteredActivities().map(a=>a.id);
+  state.activities=state.activities.filter(id=>vis.includes(id));
 }
 function filteredActivities(){
   const visible=ACTIVITIES.filter(a=>!a.hidden);          // hidden = guide-only, never in the booking picker
@@ -657,9 +673,8 @@ function canAdvance(){
   if(s==="setting") return !!state.setting && (state.setting!=="indoor" || !!state.venue);
   if(s==="activity"){
     if(state.combine) return true;
-    if(!state.activityId) return false;
-    const a=activity();
-    if(state.setting==="outdoor"&&a&&a.loc) return !!state.location;
+    if(state.activities.length<1) return false;
+    if(state.duration!=="full"){const a=activity(); if(state.setting==="outdoor"&&a&&a.loc) return !!state.location;}
     return true;
   }
   return true;
@@ -794,7 +809,7 @@ function renderRoute(){
     <div class="srow"><span class="k">Date</span><span class="v">${dateLabel()||"To confirm"}</span></div>
     <div class="srow"><span class="k">Setting</span><span class="v">${state.setting.replace("-"," · ")}</span></div>
     ${state.setting==="indoor"?`<div class="srow"><span class="k">Venue</span><span class="v">${venueLabel()}</span></div>`:""}
-    <div class="srow"><span class="k">Activity</span><span class="v">${a?a.name:(state.combine?"Combining multiple, to design":"-")}</span></div>
+    <div class="srow"><span class="k">Activity</span><span class="v">${actNames()||(state.combine?"Combining multiple, to design":"-")}</span></div>
     ${state.setting==="outdoor"&&state.location?`<div class="srow"><span class="k">Location</span><span class="v">${state.location==="custom"?"Custom (quote)":state.location}</span></div>`:""}
     <div class="srow"><span class="k">Duration</span><span class="v">${state.duration==="full"?"Full day":"Half day"}</span></div>
     <div class="srow"><span class="k">Extras</span><span class="v">${state.extras.length?state.extras.join(", "):"None"}</span></div>
@@ -831,13 +846,13 @@ function renderRoute(){
 /* ---------------- activity details modal ---------------- */
 function openModal(id){
   const a=ACTIVITIES.find(x=>x.id===id);if(!a)return;
-  $("#mImg").innerHTML=`<img src="${a.img}" alt="${a.name}" referrerpolicy="no-referrer" onerror="this.remove()">`;
+  $("#mImg").innerHTML=a.img?`<img src="${a.img}" alt="${a.name}" referrerpolicy="no-referrer" onerror="this.remove()">`:"";
   $("#mName").textContent=a.name;
   $("#mDesc").textContent=a.desc;
   const setLabel=a.set==="both"?"Indoor / Outdoor":a.set==="outdoor"?"Outdoor":"Indoor";
   $("#mTags").innerHTML=`<span class="mtag">${setLabel}</span>`+(a.q?`<span class="mtag q">⚑ Enquiry only</span>`:`<span class="mtag ok">✓ Bookable online</span>`);
   const link=$("#mLink"); link.href=a.url;
-  $("#mPick").onclick=()=>{state.activityId=id;state.combine=false;closeModal();renderStep();};
+  $("#mPick").onclick=()=>{const full=state.duration==="full";if(full){if(!state.activities.includes(id)&&state.activities.length<2)state.activities.push(id);}else{state.activities=[id];}state.combine=false;closeModal();renderStep();};
   $("#modal").classList.add("show");
 }
 function closeModal(){$("#modal").classList.remove("show");}
