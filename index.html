@@ -297,7 +297,7 @@ const ACTIVITIES=[
  {id:46,name:"Hawker Food Heroes",set:"outdoor",q:false,loc:["Marina Bay","Chinatown"],img:"",url:"https://jambarteambuilding.com/",desc:"A thrilling exploration of Singapore's hawker culture, finding, sampling and racing between local food spots."}
 ];
 
-const RATE=55, MIN=1200, CAP=50, VOL=100, WATER=3, VENUE=750;
+const RATE=55, MIN=1200, CAP=50, VOL=100, WATER=3, VENUE=750, WEEKEND=600;
 const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,location:null,activities:[],combine:false,duration:"half",daypart:null,extras:[],invoice:false};
 
 /* steps in the self-serve flow */
@@ -332,6 +332,7 @@ const icon=k=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke
 function priceFor(pax){return Math.max(MIN, pax*RATE);}
 function waterCost(){return state.extras.includes("Water")?WATER*state.headcount:0;}
 function venueCost(){return (state.setting==="indoor"&&state.venue==="plus")?(state.duration==="full"?1000:750):0;}
+function weekendFee(){if(!state.date)return 0;const d=new Date(state.date+"T00:00").getDay();return (d===0||d===6)?WEEKEND:0;}
 function venueLabel(){return state.venue==="own"?"Own venue":state.venue==="plus"?("Venue Plus (+"+money(state.duration==="full"?1000:750)+")"):state.venue==="more"?"More options (quote)":"";}
 
 function activity(){return ACTIVITIES.find(a=>a.id===state.activities[0]);}
@@ -391,10 +392,10 @@ function renderPanel(){
   add("Duration", state.duration==="full"?"Full day":(state.daypart?"Half day · "+state.daypart.toUpperCase():""));
   add("Extras", state.extras.length?state.extras.join(", "):(stepIdx>=6?"None":""));
 
-  const wc=waterCost(), vc=venueCost();
+  const wc=waterCost(), vc=venueCost(), wf=weekendFee();
   let amt,lbl,amtStyle="";
-  if(pax<=CAP){ amt=money(pr+wc+vc); lbl = (pr===MIN ? "minimum spend (under ~"+Math.ceil(MIN/RATE)+" pax)" : "S$"+RATE+"/pax × "+pax) + (wc?" + water":"") + (vc?" + venue "+money(vc):""); }
-  else if(pax<VOL){ amt=money(pax*RATE+wc+vc); lbl="from S$"+RATE+"/pax · final quote"; }
+  if(pax<=CAP){ amt=money(pr+wc+vc+wf); lbl = (pr===MIN ? "minimum spend (under ~"+Math.ceil(MIN/RATE)+" pax)" : "S$"+RATE+"/pax × "+pax) + (wc?" + water":"") + (vc?" + venue "+money(vc):"") + (wf?" + weekend S$600":""); }
+  else if(pax<VOL){ amt=money(pax*RATE+wc+vc+wf); lbl="from S$"+RATE+"/pax · final quote"; }
   else { amt="Volume pricing"; lbl="tailored for large events"; amtStyle=" style=\"font-size:28px\""; }
   let priceBlock=`<div class="price"><div class="amt"${amtStyle}>${amt}</div><div class="lbl">${lbl}</div></div>`;
 
@@ -811,7 +812,7 @@ function renderNurture(){
 function renderRoute(){
   const a=activity(), pax=state.headcount, big=pax>CAP, fl=flags(), buy=isBuyNow()&&!big;
   const showBuy=buy&&!state.invoice, inv=buy&&state.invoice;
-  const total=priceFor(pax)+waterCost()+venueCost();
+  const total=priceFor(pax)+waterCost()+venueCost()+weekendFee();
   const summary=`<div class="summary-box">
     <div class="srow"><span class="k">Type</span><span class="v">${state.purpose}</span></div>
     <div class="srow"><span class="k">Group</span><span class="v">${pax} pax</span></div>
@@ -830,7 +831,7 @@ function renderRoute(){
       <h1>You're ready to book</h1>
       <p class="sub">Everything fits the self-serve box, book &amp; pay online now. Zero sales involvement.</p>
       ${summary}
-      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl">${priceFor(pax)===MIN?"minimum spend":"S$"+RATE+"/pax × "+pax+" pax"}${waterCost()?" + water S$3/pax":""}${venueCost()?" + venue "+money(venueCost()):""} · half day${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
+      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl">${priceFor(pax)===MIN?"minimum spend":"S$"+RATE+"/pax × "+pax+" pax"}${waterCost()?" + water S$3/pax":""}${venueCost()?" + venue "+money(venueCost()):""}${weekendFee()?" + weekend S$600":""} · half day${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
       <button class="btn primary" style="margin-top:16px" onclick="alert('PROTOTYPE: opens Stripe / HitPay checkout (PayNow, cards, GrabPay).')">Pay ${money(total)} &amp; confirm booking</button>
       <div class="mock">Simulated: payment via Stripe/HitPay → booking confirmed → order logged in Zoho as <b>Booked / Won</b>. No salesperson touches it.</div>
       <a href="#" class="qlink" onclick="state.invoice=true;renderStep();return false;">Need an invoice or sign-off first? Request a quote →</a>
