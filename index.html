@@ -55,7 +55,7 @@
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px;display:flex;flex-direction:column;min-height:700px}
   .card.outcome{display:block}
-  .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px}
+  .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:auto 0 4px}
   h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
   .sub{color:var(--ink-soft);margin:0 0 26px;font-size:17px}
 
@@ -104,6 +104,14 @@
   .paxin:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-soft)}
   .paxin::-webkit-outer-spin-button,.paxin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
   .paxin{-moz-appearance:textfield}
+  @media(max-width:600px){
+    .wrap{padding:22px 13px 80px}
+    .card{padding:24px 18px;min-height:0}
+    .dayrow{grid-template-columns:1fr}
+    .count{gap:10px}
+    .count button{width:46px;height:46px;font-size:22px}
+    .paxin{width:88px;font-size:34px}
+  }
   input[type=range]{width:100%;accent-color:var(--primary)}
   .hint{font-size:14px;color:var(--ink-soft);margin-top:10px}
   .banner{margin-top:16px;padding:12px 14px;border-radius:10px;font-size:13.5px;display:flex;gap:9px;align-items:flex-start}
@@ -844,7 +852,7 @@ function renderRoute(){
       <button class="btn primary" style="margin-top:16px" onclick="alert('PROTOTYPE: opens Stripe / HitPay checkout (PayNow, cards, GrabPay).')">Pay ${money(total)} &amp; confirm booking</button>
       <div class="mock">Simulated: payment via Stripe/HitPay → booking confirmed → order logged in Zoho as <b>Booked / Won</b>. No salesperson touches it.</div>
       <a href="#" class="qlink" onclick="state.invoice=true;renderStep();return false;">Need an invoice or sign-off first? Request a quote →</a>
-      <button class="btn" style="margin-top:14px" onclick="prev()">← Change something</button>
+      <div style="text-align:left;margin-top:18px"><button class="btn" onclick="prev()">← Back</button></div>
     </div>`;
   } else {
     $("#stage").innerHTML=`<div class="card outcome">
@@ -858,7 +866,7 @@ function renderRoute(){
       ${(big&&!inv)?'<div class="field" style="max-width:340px;margin:0 auto"><input type="text" placeholder="Rough budget (optional)"></div>':''}
       <button class="btn primary" style="margin-top:8px" onclick="alert('PROTOTYPE: ${inv?"emails an invoice / proposal":"submits a pre-filled quote request"}.')">${inv?"Send my invoice":"Request my quote"}</button>
       <div class="mock">Simulated: lead created in Zoho tagged <b>Fun · ${inv?"Invoice request":"Quote"}</b>, pre-filled with everything above. ${inv?"Pay by PayNow or bank transfer, no call needed.":"Sales confirms in minutes, not a discovery call."}</div>
-      <button class="btn" style="margin-top:14px" onclick="${inv?"state.invoice=false;renderStep()":"prev()"}">← ${inv?"Back to pay option":"Change something"}</button>
+      <div style="text-align:left;margin-top:18px"><button class="btn" onclick="${inv?"state.invoice=false;renderStep()":"prev()"}">← ${inv?"Back to pay option":"Back"}</button></div>
     </div>`;
   }
 }
