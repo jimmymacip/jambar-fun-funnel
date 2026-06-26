@@ -54,7 +54,7 @@
   @media(max-width:820px){.layout{grid-template-columns:1fr}}
 
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px;display:flex;flex-direction:column;min-height:700px}
-  .card.outcome{display:block;min-height:0;height:auto}
+  .card.outcome{display:block}
   .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px}
   h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
   .sub{color:var(--ink-soft);margin:0 0 26px;font-size:17px}
@@ -354,6 +354,7 @@ function flags(){
   if(state.headcount>CAP) f.push(state.headcount>=VOL?"Large event · volume pricing":"Large group (31+ pax)");
   if(state.rush) f.push("Rush event (under 1 week)");
   if(state.hold) f.push("Holding multiple dates");
+  if(state.dateMode==="month") f.push("Month only, date to confirm");
   if(state.location==="custom") f.push("Custom location");
   if(state.setting==="indoor"&&state.venue==="more") f.push("More venue options");
   if(selActs().some(a=>a.q)) f.push("Premium / materials activity");
@@ -470,7 +471,7 @@ function renderStep(){
     const b=st.querySelectorAll(".opt");
     b[0].onclick=()=>{state.dateMode="specific";if(!state.dates.length)state.dates=[""];renderStep();};
     b[1].onclick=()=>{state.dateMode="month";renderStep();};
-    b[2].onclick=()=>{state.dateMode="exploring";terminal="nurture";renderStep();};
+    b[2].onclick=()=>{state.dateMode="exploring";state.month="";terminal="nurture";renderStep();};
     addNav();
     if(state.dateMode==="specific")buildSpecific();
     else if(state.dateMode==="month")buildMonth();
@@ -517,10 +518,8 @@ function renderStep(){
       for(let i=0;i<12;i++){months.push(new Date(now.getFullYear(),now.getMonth()+i,1).toLocaleString("en",{month:"long",year:"numeric"}));}
       dp.innerHTML=`<div class="field"><label>Which month are you aiming for?</label>
         <select id="mo"><option value="">Select a month…</option>${months.map(m=>`<option ${state.month===m?"selected":""}>${m}</option>`).join("")}</select></div>
-        <div class="hint">No specific day yet, so this can't book online, but tell us the month and we'll send pricing and help you lock a date when you're ready.</div>
-        <button class="btn primary" id="moGo" style="margin-top:10px" ${state.month?"":"disabled"}>Get pricing for ${state.month||"this month"} →</button>`;
+        <div class="hint">No specific day yet, so this can't book online, but pick your month and we'll tailor a quote and help you lock a date.</div>`;
       $("#mo").onchange=e=>{state.month=e.target.value;renderStep();};
-      const g=$("#moGo");if(g)g.onclick=()=>{terminal="nurture";renderStep();};
     }
   }
 
@@ -676,7 +675,7 @@ function addNav(nextLabel){
 }
 function canAdvance(){
   const s=STEPS[stepIdx];
-  if(s==="date") return state.dateMode==="specific" && (!!state.date || state.hold);
+  if(s==="date") return (state.dateMode==="specific" && (!!state.date || state.hold)) || (state.dateMode==="month" && !!state.month);
   if(s==="duration") return state.duration==="full" || !!state.daypart;
   if(s==="setting") return !!state.setting && (state.setting!=="indoor" || !!state.venue);
   if(s==="activity"){
