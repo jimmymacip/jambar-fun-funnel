@@ -189,6 +189,9 @@
   .price{margin-top:16px;padding-top:14px}
   .price .amt{font-size:44px;font-weight:800;letter-spacing:-.03em}
   .price .lbl{font-size:13.5px;color:var(--ink-soft)}
+  .price .plist{margin-top:8px;display:flex;flex-direction:column;gap:5px}
+  .price .pl{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--ink-soft)}
+  .price .pl span:last-child{font-weight:700;color:var(--ink);white-space:nowrap}
   .flags{margin-top:14px;display:flex;flex-direction:column;gap:6px}
   .flagchip{font-size:11.5px;background:var(--flag-soft);color:var(--flag);padding:5px 9px;border-radius:8px;font-weight:600}
   .route{margin-top:14px;padding:10px 12px;border-radius:10px;font-size:12.5px;font-weight:700;text-align:center}
@@ -333,6 +336,9 @@ function priceFor(pax){return Math.max(MIN, pax*RATE);}
 function waterCost(){return state.extras.includes("Water")?WATER*state.headcount:0;}
 function venueCost(){return (state.setting==="indoor"&&state.venue==="plus")?(state.duration==="full"?1000:750):0;}
 function weekendFee(){if(!state.date)return 0;const d=new Date(state.date+"T00:00").getDay();return (d===0||d===6)?WEEKEND:0;}
+function priceRows(){const pax=state.headcount,pr=priceFor(pax),wc=waterCost(),vc=venueCost(),wf=weekendFee();const rows=[[(pr===MIN?"Minimum spend (under ~"+Math.ceil(MIN/RATE)+" pax)":"S$"+RATE+"/pax × "+pax+" pax"),pr]];if(wf)rows.push(["Weekend fee",wf]);if(wc)rows.push(["Water (S$3/pax)",wc]);if(vc)rows.push([state.duration==="full"?"Venue Plus (full day)":"Venue Plus",vc]);return rows;}
+function priceTotal(){return priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();}
+function priceRowsHtml(){return priceRows().map(r=>`<div class="pl"><span>${r[0]}</span><span>${money(r[1])}</span></div>`).join("");}
 function venueLabel(){return state.venue==="own"?"Own venue":state.venue==="plus"?("Venue Plus (+"+money(state.duration==="full"?1000:750)+")"):state.venue==="more"?"More options (quote)":"";}
 
 function activity(){return ACTIVITIES.find(a=>a.id===state.activities[0]);}
@@ -392,12 +398,16 @@ function renderPanel(){
   add("Duration", state.duration==="full"?"Full day":(state.daypart?"Half day · "+state.daypart.toUpperCase():""));
   add("Extras", state.extras.length?state.extras.join(", "):(stepIdx>=6?"None":""));
 
-  const wc=waterCost(), vc=venueCost(), wf=weekendFee();
-  let amt,lbl,amtStyle="";
-  if(pax<=CAP){ amt=money(pr+wc+vc+wf); lbl = (pr===MIN ? "minimum spend (under ~"+Math.ceil(MIN/RATE)+" pax)" : "S$"+RATE+"/pax × "+pax) + (wc?" + water":"") + (vc?" + venue "+money(vc):"") + (wf?" + weekend S$600":""); }
-  else if(pax<VOL){ amt=money(pax*RATE+wc+vc+wf); lbl="from S$"+RATE+"/pax · final quote"; }
-  else { amt="Volume pricing"; lbl="tailored for large events"; amtStyle=" style=\"font-size:28px\""; }
-  let priceBlock=`<div class="price"><div class="amt"${amtStyle}>${amt}</div><div class="lbl">${lbl}</div></div>`;
+  let priceBlock;
+  if(pax>=VOL){
+    priceBlock=`<div class="price"><div class="amt" style="font-size:28px">Volume pricing</div><div class="lbl">tailored for large events</div></div>`;
+  } else {
+    const rows=priceRows();
+    const body = rows.length>1
+      ? `<div class="plist">${priceRowsHtml()}</div>${pax>CAP?`<div class="lbl" style="margin-top:6px">Estimate, final quote</div>`:""}`
+      : `<div class="lbl">${rows[0][0]}${pax>CAP?" · estimate, final quote":""}</div>`;
+    priceBlock=`<div class="price"><div class="amt">${money(priceTotal())}</div>${body}</div>`;
+  }
 
   let flagBlock = fl.length ? `<div class="flags">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>` : "";
   let routeBlock = stepIdx>0 ? `<div class="route ${isBuyNow()&&!big?"buy":"quote"}">${isBuyNow()&&!big?"➜ ON TRACK FOR BUY NOW":"➜ ROUTES TO QUOTE"}</div>` : "";
@@ -831,7 +841,7 @@ function renderRoute(){
       <h1>You're ready to book</h1>
       <p class="sub">Everything fits the self-serve box, book &amp; pay online now. Zero sales involvement.</p>
       ${summary}
-      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl">${priceFor(pax)===MIN?"minimum spend":"S$"+RATE+"/pax × "+pax+" pax"}${waterCost()?" + water S$3/pax":""}${venueCost()?" + venue "+money(venueCost()):""}${weekendFee()?" + weekend S$600":""} · half day${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
+      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="plist">${priceRowsHtml()}</div><div class="lbl" style="margin-top:8px">Half day${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
       <button class="btn primary" style="margin-top:16px" onclick="alert('PROTOTYPE: opens Stripe / HitPay checkout (PayNow, cards, GrabPay).')">Pay ${money(total)} &amp; confirm booking</button>
       <div class="mock">Simulated: payment via Stripe/HitPay → booking confirmed → order logged in Zoho as <b>Booked / Won</b>. No salesperson touches it.</div>
       <a href="#" class="qlink" onclick="state.invoice=true;renderStep();return false;">Need an invoice or sign-off first? Request a quote →</a>
