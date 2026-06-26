@@ -574,7 +574,6 @@ function renderStep(){
     <p class="sub">${full?"A full day fits up to two activities. Pick one or two and we'll tailor the day, then send a quote. Facilitator always included.":"Price stays the same whichever you choose, pick on fun, not cost. Facilitator always included."}</p>
     <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span>${full?` · <b id="selcount">${state.activities.length}/2 selected</b>`:""}</div>
     <div class="grid" id="grid"></div>
-    ${full?"":`<div class="combine"><div class="ct"><b>Want to combine a few activities or run a full day?</b><br>That's a tailored day, we'll design it with you.</div><button class="btn" id="combineCta">Tailor it for me →</button></div>`}
     <div id="locbody"></div>
     </div>`;
     st.innerHTML=html;
@@ -592,7 +591,6 @@ function renderStep(){
       d.querySelector(".info").onclick=e=>{e.stopPropagation();openModal(a.id);};
       g.appendChild(d);
     });
-    const cc=$("#combineCta");if(cc)cc.onclick=()=>{state.combine=true;state.activities=[];next();};
     syncLocation();buildLocation();
     addNav();
 
