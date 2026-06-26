@@ -202,6 +202,7 @@
   .outcome h1{font-size:30px}
   .summary-box{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:16px;margin:18px 0}
   .mock{font-size:12px;color:var(--ink-soft);background:#fff;border:1px dashed var(--line);border-radius:8px;padding:8px 12px;margin-top:12px}
+  .qlink{display:inline-block;margin-top:14px;color:var(--ink-soft);font-size:13.5px;text-decoration:underline;cursor:pointer}
   .note{font-size:13px;color:var(--ink-soft);text-align:center;margin-top:26px;border-top:1px solid var(--line);padding-top:14px}
 </style>
 </head>
@@ -297,7 +298,7 @@ const ACTIVITIES=[
 ];
 
 const RATE=55, MIN=1200, CAP=50, VOL=100, WATER=3, VENUE=750;
-const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,location:null,activities:[],combine:false,duration:"half",daypart:null,extras:[]};
+const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,location:null,activities:[],combine:false,duration:"half",daypart:null,extras:[],invoice:false};
 
 /* steps in the self-serve flow */
 const STEPS=["purpose","headcount","date","duration","setting","activity","extras","route"];
@@ -687,7 +688,7 @@ function canAdvance(){
   return true;
 }
 function next(){if(stepIdx<STEPS.length-1){stepIdx++;renderStep();window.scrollTo({top:0,behavior:"smooth"});}}
-function prev(){if(stepIdx>0){stepIdx--;terminal=null;renderStep();window.scrollTo({top:0,behavior:"smooth"});}}
+function prev(){if(stepIdx>0){stepIdx--;terminal=null;state.invoice=false;renderStep();window.scrollTo({top:0,behavior:"smooth"});}}
 
 /* ---------------- outcome screens ---------------- */
 function renderTerminal(){
@@ -809,6 +810,7 @@ function renderNurture(){
 
 function renderRoute(){
   const a=activity(), pax=state.headcount, big=pax>CAP, fl=flags(), buy=isBuyNow()&&!big;
+  const showBuy=buy&&!state.invoice, inv=buy&&state.invoice;
   const total=priceFor(pax)+waterCost()+venueCost();
   const summary=`<div class="summary-box">
     <div class="srow"><span class="k">Type</span><span class="v">${state.purpose}</span></div>
@@ -822,7 +824,7 @@ function renderRoute(){
     <div class="srow"><span class="k">Extras</span><span class="v">${state.extras.length?state.extras.join(", "):"None"}</span></div>
   </div>`;
 
-  if(buy){
+  if(showBuy){
     $("#stage").innerHTML=`<div class="card outcome">
       <div class="ic" style="background:var(--buy-soft);color:var(--buy)">${icon('card')}</div>
       <h1>You're ready to book</h1>
@@ -831,21 +833,22 @@ function renderRoute(){
       <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl">${priceFor(pax)===MIN?"minimum spend":"S$"+RATE+"/pax × "+pax+" pax"}${waterCost()?" + water S$3/pax":""}${venueCost()?" + venue "+money(venueCost()):""} · half day${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
       <button class="btn primary" style="margin-top:16px" onclick="alert('PROTOTYPE: opens Stripe / HitPay checkout (PayNow, cards, GrabPay).')">Pay ${money(total)} &amp; confirm booking</button>
       <div class="mock">Simulated: payment via Stripe/HitPay → booking confirmed → order logged in Zoho as <b>Booked / Won</b>. No salesperson touches it.</div>
+      <a href="#" class="qlink" onclick="state.invoice=true;renderStep();return false;">Need an invoice or sign-off first? Request a quote →</a>
       <button class="btn" style="margin-top:14px" onclick="prev()">← Change something</button>
     </div>`;
   } else {
     $("#stage").innerHTML=`<div class="card outcome">
       <div class="ic" style="background:var(--quote-soft);color:var(--quote)">${icon('doc')}</div>
-      <h1>Let's tailor this for you</h1>
-      <p class="sub">${pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch."} Send it over and we'll confirm fast, most of the work's already done.</p>
+      <h1>${inv?"Invoice or sign-off":"Let's tailor this for you"}</h1>
+      <p class="sub">${inv?"Everything's set, no call needed. Pop in your details and we'll email an invoice you can pay by PayNow or bank transfer.":(pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch.")+" Send it over and we'll confirm fast, most of the work's already done."}</p>
       ${summary}
-      <div class="flags" style="max-width:420px;margin:0 auto">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>
+      ${inv?"":`<div class="flags" style="max-width:420px;margin:0 auto">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>`}
       <div class="field" style="max-width:340px;margin:16px auto 0"><input type="text" placeholder="Name"></div>
       <div class="field" style="max-width:340px;margin:0 auto"><input type="email" placeholder="Work email"></div>
-      ${big?'<div class="field" style="max-width:340px;margin:0 auto"><input type="text" placeholder="Rough budget (optional)"></div>':''}
-      <button class="btn primary" style="margin-top:8px" onclick="alert('PROTOTYPE: submits a pre-filled quote request.')">Request my quote</button>
-      <div class="mock">Simulated: lead created in Zoho tagged <b>Fun · Quote</b>, pre-filled with everything above, sales confirms in minutes, not a discovery call.</div>
-      <button class="btn" style="margin-top:14px" onclick="prev()">← Change something</button>
+      ${(big&&!inv)?'<div class="field" style="max-width:340px;margin:0 auto"><input type="text" placeholder="Rough budget (optional)"></div>':''}
+      <button class="btn primary" style="margin-top:8px" onclick="alert('PROTOTYPE: ${inv?"emails an invoice / proposal":"submits a pre-filled quote request"}.')">${inv?"Send my invoice":"Request my quote"}</button>
+      <div class="mock">Simulated: lead created in Zoho tagged <b>Fun · ${inv?"Invoice request":"Quote"}</b>, pre-filled with everything above. ${inv?"Pay by PayNow or bank transfer, no call needed.":"Sales confirms in minutes, not a discovery call."}</div>
+      <button class="btn" style="margin-top:14px" onclick="${inv?"state.invoice=false;renderStep()":"prev()"}">← ${inv?"Back to pay option":"Change something"}</button>
     </div>`;
   }
 }
