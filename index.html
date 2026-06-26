@@ -80,6 +80,11 @@
   .opt .ok{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
   .opt .ot{font-weight:700;font-size:18px;display:block}
   .opt .od{font-size:15px;color:var(--ink-soft);margin-top:2px;display:block}
+  .setcard{flex-direction:column;align-items:stretch;padding:0;overflow:hidden;gap:0}
+  .setcard .setrow{display:flex;gap:18px;align-items:center;padding:18px 20px}
+  .setcard .setpic{display:block;width:100%;height:150px;overflow:hidden;background:#eef2f7}
+  .setcard .setpic img{width:100%;height:100%;object-fit:cover;display:block}
+  .seclabel{font-family:var(--font-head);font-weight:800;font-size:22px;display:block;margin-bottom:6px}
 
   /* step 1 service cards (with photos) */
   .svc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px}
@@ -538,8 +543,8 @@ function renderStep(){
   else if(s==="setting"){
     html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Indoor or outdoor?</h1><p class="sub">This filters the activities you'll see next.</p>
     <div class="opts">
-      ${optHTML("building","Indoor","Hotel function room, conference space or your office.",state.setting==="indoor")}
-      ${optHTML("leaf","Outdoor","A park, the city or the beach. You'll pick the exact spot with your activity.",state.setting==="outdoor")}
+      <button class="opt setcard${state.setting==="indoor"?" sel":""}"><span class="setrow"><span class="ic">${icon('building')}</span><span class="otxt"><span class="ot">Indoor</span><span class="od">Hotel function room, conference space or your office.</span></span></span><span class="setpic"><img src="indoor.jpg" alt="Indoor team building" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></span></button>
+      <button class="opt setcard${state.setting==="outdoor"?" sel":""}"><span class="setrow"><span class="ic">${icon('leaf')}</span><span class="otxt"><span class="ot">Outdoor</span><span class="od">A park, the city or the beach. You'll pick the exact spot with your activity.</span></span></span><span class="setpic"><img src="outdoor.jpg" alt="Outdoor team building" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></span></button>
     </div>
     <div id="venuebody"></div></div>`;
     st.innerHTML=html;
@@ -551,7 +556,7 @@ function renderStep(){
 
     function buildVenue(){
       const vb=$("#venuebody");if(!vb)return;
-      vb.innerHTML=`<div style="margin-top:22px"><label style="font-weight:700;font-size:15px">Where will the indoor event be?</label><div class="opts" style="margin-top:12px">
+      vb.innerHTML=`<div style="margin-top:22px"><label class="seclabel">Where will the indoor event be?</label><div class="opts" style="margin-top:12px">
         ${optHTML("building","Your own venue / office","You provide the space. No venue cost, books online.",state.venue==="own")}
         <div class="opt venueopt${state.venue==="plus"?" sel":""}" role="button" tabindex="0">
           <span class="otxt"><span class="ot">Venue Plus  ·  +${state.duration==="full"?"S$1,000":"S$750"}</span><span class="od">A partner venue. Books online.</span><a class="vlink" href="https://venue-plus.com" target="_blank" rel="noopener">See the venue ↗</a></span>
@@ -610,7 +615,7 @@ function renderStep(){
       if(state.duration==="full"||state.setting!=="outdoor"||!a||!a.loc){lb.innerHTML="";return;}
       if(a.loc.length===1){lb.innerHTML=`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Where in Singapore</div><div class="lv">Held at ${a.loc[0]}</div></div></div>`;return;}
       const chips=a.loc.map(L=>`<div class="chip${state.location===L?" sel":""}" data-l="${L}">${L}</div>`).join("")+`<div class="chip${state.location==="custom"?" sel":""}" data-l="custom">Somewhere else (we'll quote)</div>`;
-      lb.innerHTML=`<div style="margin-top:20px"><label style="font-weight:700;font-size:15px">Where in Singapore?</label><div class="chips" style="margin-top:10px">${chips}</div></div>`;
+      lb.innerHTML=`<div style="margin-top:20px"><label class="seclabel">Where in Singapore?</label><div class="chips" style="margin-top:10px">${chips}</div></div>`;
       lb.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{state.location=c.dataset.l;lb.querySelectorAll(".chip").forEach(x=>x.classList.toggle("sel",x.dataset.l===state.location));const f=$("#fwd");if(f)f.disabled=!canAdvance();renderPanel();});
     }
   }
