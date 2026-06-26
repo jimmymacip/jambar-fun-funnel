@@ -53,7 +53,7 @@
   .layout{display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start}
   @media(max-width:820px){.layout{grid-template-columns:1fr}}
 
-  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px;display:flex;flex-direction:column;min-height:540px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:34px;display:flex;flex-direction:column;min-height:620px}
   .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px}
   h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
   .sub{color:var(--ink-soft);margin:0 0 26px;font-size:17px}
@@ -583,7 +583,7 @@ function renderStep(){
       if(a.loc.length===1){lb.innerHTML=`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Where in Singapore</div><div class="lv">Held at ${a.loc[0]}</div></div></div>`;return;}
       const chips=a.loc.map(L=>`<div class="chip${state.location===L?" sel":""}" data-l="${L}">${L}</div>`).join("")+`<div class="chip${state.location==="custom"?" sel":""}" data-l="custom">Somewhere else (we'll quote)</div>`;
       lb.innerHTML=`<div style="margin-top:20px"><label style="font-weight:700;font-size:15px">Where in Singapore?</label><div class="chips" style="margin-top:10px">${chips}</div></div>`;
-      lb.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{state.location=c.dataset.l;renderStep();});
+      lb.querySelectorAll(".chip").forEach(c=>c.onclick=()=>{state.location=c.dataset.l;lb.querySelectorAll(".chip").forEach(x=>x.classList.toggle("sel",x.dataset.l===state.location));const f=$("#fwd");if(f)f.disabled=!canAdvance();renderPanel();});
     }
   }
 
