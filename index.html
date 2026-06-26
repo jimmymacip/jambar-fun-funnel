@@ -80,10 +80,6 @@
   .opt .ok{font-size:12px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;margin-bottom:1px}
   .opt .ot{font-weight:700;font-size:18px;display:block}
   .opt .od{font-size:15px;color:var(--ink-soft);margin-top:2px;display:block}
-  .setcard{flex-direction:column;align-items:stretch;padding:0;overflow:hidden;gap:0}
-  .setcard .setrow{display:flex;gap:18px;align-items:center;padding:18px 20px}
-  .setcard .setpic{display:block;width:100%;height:150px;overflow:hidden;background:#eef2f7}
-  .setcard .setpic img{width:100%;height:100%;object-fit:cover;display:block}
   .seclabel{font-family:var(--font-head);font-weight:800;font-size:22px;display:block;margin-bottom:6px}
 
   /* step 1 service cards (with photos) */
@@ -542,13 +538,13 @@ function renderStep(){
 
   else if(s==="setting"){
     html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Indoor or outdoor?</h1><p class="sub">This filters the activities you'll see next.</p>
-    <div class="opts">
-      <button class="opt setcard${state.setting==="indoor"?" sel":""}"><span class="setrow"><span class="ic">${icon('building')}</span><span class="otxt"><span class="ot">Indoor</span><span class="od">Hotel function room, conference space or your office.</span></span></span><span class="setpic"><img src="indoor.jpg" alt="Indoor team building" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></span></button>
-      <button class="opt setcard${state.setting==="outdoor"?" sel":""}"><span class="setrow"><span class="ic">${icon('leaf')}</span><span class="otxt"><span class="ot">Outdoor</span><span class="od">A park, the city or the beach. You'll pick the exact spot with your activity.</span></span></span><span class="setpic"><img src="outdoor.jpg" alt="Outdoor team building" referrerpolicy="no-referrer" onerror="this.parentNode.remove()"></span></button>
+    <div class="svc">
+      <button class="svccard${state.setting==="indoor"?" sel":""}"><span class="pic"><img src="indoor.jpg" alt="Indoor team building" referrerpolicy="no-referrer" onerror="this.remove()"></span><span class="body"><span class="ttl">Indoor</span><span class="od">Hotel function room, conference space or your office.</span></span></button>
+      <button class="svccard${state.setting==="outdoor"?" sel":""}"><span class="pic"><img src="outdoor.jpg" alt="Outdoor team building" referrerpolicy="no-referrer" onerror="this.remove()"></span><span class="body"><span class="ttl">Outdoor</span><span class="od">A park, the city or the beach. You'll pick the exact spot with your activity.</span></span></button>
     </div>
     <div id="venuebody"></div></div>`;
     st.innerHTML=html;
-    const b=st.querySelectorAll(".opt");
+    const b=st.querySelectorAll(".svccard");
     b[0].onclick=()=>{state.setting="indoor";state.location=null;clearActivityIfHidden();renderStep();};
     b[1].onclick=()=>{state.setting="outdoor";state.venue=null;state.location=null;clearActivityIfHidden();renderStep();};
     addNav();
