@@ -57,7 +57,7 @@
   .card.outcome{display:block}
   .step-k{font-size:14px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.05em;margin:0 0 4px}
   h1{font-size:34px;margin:0 0 8px;letter-spacing:-.02em}
-  .sub{color:var(--ink-soft);margin:0 0 26px;font-size:17px}
+  .sub{color:var(--ink-soft);margin:0 auto 30px;font-size:17px;max-width:540px;line-height:1.5}
 
   .opts{display:flex;flex-direction:column;gap:13px}
   .dayrow{display:grid;grid-template-columns:1fr 1fr;gap:13px}
@@ -208,7 +208,7 @@
   .route.quote{background:var(--quote-soft);color:#9a3412}
 
   /* outcome screens */
-  .outcome{text-align:center;padding:14px 8px}
+  .outcome{text-align:center;padding:30px 28px}
   .outcome .ic{width:74px;height:74px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 18px}
   .outcome .ic svg{width:34px;height:34px}
   .outcome h1{font-size:30px}
@@ -873,12 +873,14 @@ function renderRoute(){
       <h1>${inv?"Invoice or sign-off":"Let's tailor this for you"}</h1>
       <p class="sub">${inv?"Everything's set, no call needed. Pop in your details and we'll email an invoice you can pay by PayNow or bank transfer.":(pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch.")+" Send it over and we'll confirm fast, most of the work's already done."}</p>
       ${ecards}
-      ${inv?"":`<div class="flags" style="max-width:420px;margin:0 auto">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>`}
-      <div class="field" style="max-width:340px;margin:16px auto 0"><input type="text" id="qname" placeholder="Name"></div>
-      <div class="field" style="max-width:340px;margin:0 auto"><input type="email" id="qemail" placeholder="Work email"></div>
-      ${(big&&!inv)?'<div class="field" style="max-width:340px;margin:0 auto"><input type="text" id="qbudget" placeholder="Rough budget (optional)"></div>':''}
-      <button class="btn primary" id="qsend" style="margin-top:8px">${inv?"Send my invoice":"Request my quote"}</button>
-      <div id="qmsg" class="mock">${inv?"We'll email an invoice you can pay by PayNow or bank transfer.":"We'll email your quote as a PDF in a few seconds."}</div>
+      ${inv?"":`<div class="flags" style="max-width:420px;margin:22px auto 6px">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>`}
+      <div style="max-width:380px;margin:26px auto 0;display:flex;flex-direction:column;gap:16px">
+        <div class="field" style="margin:0"><input type="text" id="qname" placeholder="Name"></div>
+        <div class="field" style="margin:0"><input type="email" id="qemail" placeholder="Work email"></div>
+        ${(big&&!inv)?'<div class="field" style="margin:0"><input type="text" id="qbudget" placeholder="Rough budget (optional)"></div>':''}
+        <button class="btn primary" id="qsend" style="margin-top:4px;padding:18px 32px;font-size:18px">${inv?"Send my invoice":"Receive instant quote"}</button>
+      </div>
+      <div id="qmsg" class="mock" style="margin-top:20px">${inv?"We'll email an invoice you can pay by PayNow or bank transfer.":"We'll email your quote as a PDF in a few seconds."}</div>
       <div style="text-align:left;margin-top:18px"><button class="btn" onclick="${inv?"state.invoice=false;renderStep()":"prev()"}">← ${inv?"Back to pay option":"Back"}</button></div>
     </div>`;
     const _qs=document.getElementById("qsend"); if(_qs) _qs.onclick=submitQuote;
@@ -910,10 +912,10 @@ async function submitQuote(){
     const r=await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     const data=await r.json();
     if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF.";} }
-    else { if(msg){msg.style.color="var(--quote)";msg.textContent="Hmm, that didn't send: "+(data.error||"please try again.");} if(btn){btn.disabled=false; btn.textContent="Request my quote";} }
+    else { if(msg){msg.style.color="var(--quote)";msg.textContent="Hmm, that didn't send: "+(data.error||"please try again.");} if(btn){btn.disabled=false; btn.textContent="Receive instant quote";} }
   }catch(e){
     if(msg){msg.style.color="var(--quote)";msg.textContent="Network error — please try again.";}
-    if(btn){btn.disabled=false; btn.textContent="Request my quote";}
+    if(btn){btn.disabled=false; btn.textContent="Receive instant quote";}
   }
 }
 
