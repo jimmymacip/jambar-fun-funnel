@@ -310,6 +310,7 @@ const ACTIVITIES=[
 ];
 
 const RATE=55, MIN=1200, CAP=50, VOL=100, WATER=3, VENUE=750, WEEKEND=600;
+const QUOTE_API_URL="https://jambar-quote-api-24jc.vercel.app/api/quote";
 const state={purpose:null,headcount:18,dateMode:null,date:"",dates:[],month:"",hold:false,rush:false,setting:null,venue:null,location:null,activities:[],combine:false,duration:"half",daypart:null,extras:[],invoice:false};
 
 /* steps in the self-serve flow */
@@ -861,13 +862,44 @@ function renderRoute(){
       <p class="sub">${inv?"Everything's set, no call needed. Pop in your details and we'll email an invoice you can pay by PayNow or bank transfer.":(pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch.")+" Send it over and we'll confirm fast, most of the work's already done."}</p>
       ${summary}
       ${inv?"":`<div class="flags" style="max-width:420px;margin:0 auto">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>`}
-      <div class="field" style="max-width:340px;margin:16px auto 0"><input type="text" placeholder="Name"></div>
-      <div class="field" style="max-width:340px;margin:0 auto"><input type="email" placeholder="Work email"></div>
-      ${(big&&!inv)?'<div class="field" style="max-width:340px;margin:0 auto"><input type="text" placeholder="Rough budget (optional)"></div>':''}
-      <button class="btn primary" style="margin-top:8px" onclick="alert('PROTOTYPE: ${inv?"emails an invoice / proposal":"submits a pre-filled quote request"}.')">${inv?"Send my invoice":"Request my quote"}</button>
-      <div class="mock">Simulated: lead created in Zoho tagged <b>Fun · ${inv?"Invoice request":"Quote"}</b>, pre-filled with everything above. ${inv?"Pay by PayNow or bank transfer, no call needed.":"Sales confirms in minutes, not a discovery call."}</div>
+      <div class="field" style="max-width:340px;margin:16px auto 0"><input type="text" id="qname" placeholder="Name"></div>
+      <div class="field" style="max-width:340px;margin:0 auto"><input type="email" id="qemail" placeholder="Work email"></div>
+      ${(big&&!inv)?'<div class="field" style="max-width:340px;margin:0 auto"><input type="text" id="qbudget" placeholder="Rough budget (optional)"></div>':''}
+      <button class="btn primary" id="qsend" style="margin-top:8px">${inv?"Send my invoice":"Request my quote"}</button>
+      <div id="qmsg" class="mock">${inv?"We'll email an invoice you can pay by PayNow or bank transfer.":"We'll email your quote as a PDF in a few seconds."}</div>
       <div style="text-align:left;margin-top:18px"><button class="btn" onclick="${inv?"state.invoice=false;renderStep()":"prev()"}">← ${inv?"Back to pay option":"Back"}</button></div>
     </div>`;
+    const _qs=document.getElementById("qsend"); if(_qs) _qs.onclick=submitQuote;
+  }
+}
+
+async function submitQuote(){
+  const email=(document.getElementById("qemail")?.value||"").trim();
+  const name=(document.getElementById("qname")?.value||"").trim();
+  const msg=document.getElementById("qmsg");
+  if(!/.+@.+\..+/.test(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please enter a valid work email.";} return; }
+  const total=priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();
+  const payload={
+    email, name,
+    activities: state.activities.map(id=>{const a=ACTIVITIES.find(x=>x.id===id);return a?a.name:null;}).filter(Boolean),
+    type: "Team Building for "+(state.purpose||"Fun"),
+    pax: state.headcount,
+    date: dateLabel()||"To confirm",
+    setting: state.setting + (state.setting==="indoor"?" · "+venueLabel():""),
+    duration: (state.duration==="full"?"Full day":"Half day"+(state.daypart?" · "+state.daypart.toUpperCase():"")),
+    price: money(total)
+  };
+  const btn=document.getElementById("qsend");
+  if(btn){btn.disabled=true; btn.textContent="Sending…";}
+  if(msg){msg.style.color=""; msg.textContent="";}
+  try{
+    const r=await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data=await r.json();
+    if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF.";} }
+    else { if(msg){msg.style.color="var(--quote)";msg.textContent="Hmm, that didn't send: "+(data.error||"please try again.");} if(btn){btn.disabled=false; btn.textContent="Request my quote";} }
+  }catch(e){
+    if(msg){msg.style.color="var(--quote)";msg.textContent="Network error — please try again.";}
+    if(btn){btn.disabled=false; btn.textContent="Request my quote";}
   }
 }
 
