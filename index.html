@@ -258,7 +258,6 @@
     </div>
   </div></div>
 
-  <p class="note">Working prototype, front-end only. Payment, CRM writes and emails are simulated and labelled. Pricing rule: <b>greater of S$1,200 or headcount × S$55</b>. Colours &amp; activity tags are placeholders for you to correct.</p>
 </div>
 
 <script>
@@ -354,6 +353,8 @@ function weekendFee(){if(!state.date)return 0;const d=new Date(state.date+"T00:0
 function priceRows(){const pax=state.headcount,pr=priceFor(pax),wc=waterCost(),vc=venueCost(),wf=weekendFee();const rows=[[(pr===MIN?"Minimum spend (under ~"+Math.ceil(MIN/RATE)+" pax)":"S$"+RATE+"/pax × "+pax+" pax"),pr]];if(wf)rows.push(["Weekend fee",wf]);if(wc)rows.push(["Water (S$3/pax)",wc]);if(vc)rows.push(["Venue+ · "+(state.duration==="full"?"Full day":"Half day")+(venueWeekend()?" · Fri–Sun":""),vc]);return rows;}
 function priceTotal(){return priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();}
 function priceRowsHtml(){return priceRows().map(r=>`<div class="pl"><span>${r[0]}</span><span>${money(r[1])}</span></div>`).join("");}
+// Items that can't be priced without a human — shown as "quoted separately", not silently dropped.
+function tbcRows(){const t=[];if(state.setting==="indoor"&&state.venue==="more")t.push(["Venue","Quoted separately"]);if(state.setting==="outdoor"&&state.location==="custom")t.push(["Custom location","Quoted separately"]);if(state.combine)t.push(["Activity design","Quoted separately"]);return t;}
 function venueLabel(){return state.venue==="own"?"Own venue":state.venue==="plus"?("Venue+ (+"+money(venueRate(state.duration))+")"):state.venue==="more"?"More options (quote)":"";}
 
 function activity(){return ACTIVITIES.find(a=>a.id===state.activities[0]);}
@@ -406,22 +407,29 @@ function renderPanel(){
   add("Type", state.purpose);
   add("Group size", pax+" pax");
   add("Date", dateLabel());
+  add("Duration", state.duration==="full"?"Full day":(state.daypart?"Half day · "+state.daypart.toUpperCase():""));
+  add("Facilitator", (state.duration==="full"||state.daypart)?"Included":"");
   add("Setting", state.setting?state.setting.replace("-"," · "):"");
   if(state.setting==="indoor") add("Venue", venueLabel());
-  add("Activity", actNames()||(state.combine?"Combining multiple":""));
   if(state.setting==="outdoor"&&state.location) add("Location", state.location==="custom"?"Custom (quote)":state.location);
-  add("Duration", state.duration==="full"?"Full day":(state.daypart?"Half day · "+state.daypart.toUpperCase():""));
+  add("Activity", actNames()||(state.combine?"Combining multiple":""));
   add("Extras", state.extras.length?state.extras.join(", "):(stepIdx>=6?"None":""));
 
   let priceBlock;
   if(pax>=VOL){
     priceBlock=`<div class="price"><div class="amt" style="font-size:28px">Volume pricing</div><div class="lbl">tailored for large events</div></div>`;
   } else {
-    const rows=priceRows();
-    const body = rows.length>1
-      ? `<div class="plist">${priceRowsHtml()}</div>${pax>CAP?`<div class="lbl" style="margin-top:6px">Estimate, final quote</div>`:""}`
-      : `<div class="lbl">${rows[0][0]}${pax>CAP?" · estimate, final quote":""}</div>`;
-    priceBlock=`<div class="price"><div class="amt">${money(priceTotal())}</div>${body}</div>`;
+    const estimate = !(isBuyNow()&&!big);   // routes to quote => indicative "from" price
+    const rows=priceRows(), tbc=tbcRows();
+    const tbcHtml = tbc.map(t=>`<div class="pl"><span>${t[0]}</span><span style="color:var(--quote);font-weight:600">${t[1]}</span></div>`).join("");
+    const list = (rows.length>1||tbc.length)
+      ? `<div class="plist">${priceRowsHtml()}${tbcHtml}</div>`
+      : `<div class="lbl">${rows[0][0]}</div>`;
+    const cap = estimate ? `<div class="lbl" style="margin-top:6px">Indicative — final quote on confirmation</div>` : "";
+    const head = estimate
+      ? `<div class="lbl" style="margin-bottom:-2px">From</div><div class="amt">${money(priceTotal())}</div>`
+      : `<div class="amt">${money(priceTotal())}</div>`;
+    priceBlock=`<div class="price">${head}${list}${cap}</div>`;
   }
 
   let flagBlock = fl.length ? `<div class="flags">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>` : "";
@@ -722,8 +730,7 @@ function renderTerminal(){
       <div class="ic" style="background:var(--grow-soft);color:var(--grow)">${icon('target')}</div>
       <h1>Sounds like Team Building for Growth</h1>
       <p class="sub">You want the day to <i>achieve</i> something, an outcome, not just a great time. That's our outcome-led, facilitated track with structured reflection.</p>
-      <button class="btn primary" onclick="alert('PROTOTYPE: redirects to the Team Building for Growth funnel.')">Explore Growth →</button>
-      <div class="mock">Simulated: redirect to /team-building-growth. No sales task created from the Fun funnel.</div>
+      <button class="btn primary" onclick="window.open('https://jambarteambuilding.com/team-building-growth/','_blank')">Explore Growth →</button>
       <button class="btn" style="margin-top:14px" onclick="terminal=null;renderStep()">← Actually, it's just for fun</button>
     </div>`;
   } else if(terminal==="nurture"){
@@ -812,7 +819,6 @@ function renderNurture(){
         <h2>${ctaHead}</h2><p>${ctaText}</p>
         <button class="btn buy" id="ncta">${ctaBtn}</button>
       </div>
-      <div class="mock">Simulated: contact created in Zoho tagged <b>${tag}</b>, price-guide email sent. ${queue}</div>
     </div>
     <button class="btn" style="margin-top:16px" id="nback">← Back</button>
   </div>`;
@@ -861,26 +867,27 @@ function renderRoute(){
       <h1>You're ready to book</h1>
       <p class="sub">Everything fits the self-serve box, book &amp; pay online now. Zero sales involvement.</p>
       ${ecards}
-      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="plist">${priceRowsHtml()}</div><div class="lbl" style="margin-top:8px">Half day${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
-      <button class="btn primary" style="margin-top:16px" onclick="alert('PROTOTYPE: opens Stripe / HitPay checkout (PayNow, cards, GrabPay).')">Pay ${money(total)} &amp; confirm booking</button>
-      <div class="mock">Simulated: payment via Stripe/HitPay → booking confirmed → order logged in Zoho as <b>Booked / Won</b>. No salesperson touches it.</div>
-      <a href="#" class="qlink" onclick="state.invoice=true;renderStep();return false;">Need an invoice or sign-off first? Request a quote →</a>
+      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl" style="margin-top:8px">${state.duration==="full"?"Full day":"Half day"}${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
+        <button class="btn" onclick="state.invoice=true;renderStep()" style="flex:1;min-width:210px;padding:16px">Instant proposal &amp; quote</button>
+        <button class="btn primary" onclick="alert('Online card payment is coming soon — for now, tap “Instant proposal & quote”.')" style="flex:1;min-width:210px;padding:16px">Pay ${money(total)} &amp; confirm booking</button>
+      </div>
       <div style="text-align:left;margin-top:18px"><button class="btn" onclick="prev()">← Back</button></div>
     </div>`;
   } else {
     $("#stage").innerHTML=`<div class="card outcome">
       <div class="ic" style="background:var(--quote-soft);color:var(--quote)">${icon('doc')}</div>
-      <h1>${inv?"Invoice or sign-off":"Let's tailor this for you"}</h1>
-      <p class="sub">${inv?"Everything's set, no call needed. Pop in your details and we'll email an invoice you can pay by PayNow or bank transfer.":(pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch.")+" Send it over and we'll confirm fast, most of the work's already done."}</p>
+      <h1>${inv?"Your instant proposal & quote":"Let's tailor this for you"}</h1>
+      <p class="sub">${inv?"Pop in your details and we'll email your full proposal and quote as a PDF — book online when you're ready, or pay by PayNow or bank transfer.":(pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch.")+" Send it over and we'll confirm fast, most of the work's already done."}</p>
       ${ecards}
       ${inv?"":`<div class="flags" style="max-width:420px;margin:22px auto 6px">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>`}
       <div style="max-width:380px;margin:26px auto 0;display:flex;flex-direction:column;gap:16px">
         <div class="field" style="margin:0"><input type="text" id="qname" placeholder="Name"></div>
         <div class="field" style="margin:0"><input type="email" id="qemail" placeholder="Work email"></div>
         ${(big&&!inv)?'<div class="field" style="margin:0"><input type="text" id="qbudget" placeholder="Rough budget (optional)"></div>':''}
-        <button class="btn primary" id="qsend" style="margin-top:4px;padding:18px 32px;font-size:18px">${inv?"Send my invoice":"Receive instant quote"}</button>
+        <button class="btn primary" id="qsend" style="margin-top:4px;padding:18px 32px;font-size:18px">${inv?"Email my proposal & quote":"Receive instant quote"}</button>
       </div>
-      <div id="qmsg" class="mock" style="margin-top:20px">${inv?"We'll email an invoice you can pay by PayNow or bank transfer.":"We'll email your quote as a PDF in a few seconds."}</div>
+      <div id="qmsg" class="mock" style="margin-top:20px">${inv?"We'll email your proposal & quote PDF in a few seconds.":"We'll email your quote as a PDF in a few seconds."}</div>
       <div style="text-align:left;margin-top:18px"><button class="btn" onclick="${inv?"state.invoice=false;renderStep()":"prev()"}">← ${inv?"Back to pay option":"Back"}</button></div>
     </div>`;
     const _qs=document.getElementById("qsend"); if(_qs) _qs.onclick=submitQuote;
@@ -894,6 +901,7 @@ async function submitQuote(){
   if(!/.+@.+\..+/.test(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please enter a valid work email.";} return; }
   if(emailBlocked(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please use your work email address.";} return; }
   const total=priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();
+  const isEstimate = !(isBuyNow()&&state.headcount<=CAP);
   const payload={
     email, name,
     activities: state.activities.map(id=>{const a=ACTIVITIES.find(x=>x.id===id);return a?a.name:null;}).filter(Boolean),
@@ -902,7 +910,8 @@ async function submitQuote(){
     date: dateLabel()||"To confirm",
     setting: state.setting + (state.setting==="indoor"?" · "+venueLabel():""),
     duration: (state.duration==="full"?"Full day":"Half day"+(state.daypart?" · "+state.daypart.toUpperCase():"")),
-    price: money(total),
+    price: (isEstimate?"From ":"")+money(total),
+    priceNote: isEstimate?"Indicative estimate · final quote on confirmation":"Facilitator included",
     venuePlus: state.venue==="plus"
   };
   const btn=document.getElementById("qsend");
