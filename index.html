@@ -883,6 +883,7 @@ function renderRoute(){
       <div style="max-width:380px;margin:26px auto 0;display:flex;flex-direction:column;gap:16px">
         <div class="field" style="margin:0"><input type="text" id="qname" placeholder="Name"></div>
         <div class="field" style="margin:0"><input type="email" id="qemail" placeholder="Work email"></div>
+        <div class="field" style="margin:0"><input type="text" id="qcompany" placeholder="Company (optional)"></div>
         ${(big&&!inv)?'<div class="field" style="margin:0"><input type="text" id="qbudget" placeholder="Rough budget (optional)"></div>':''}
         <button class="btn primary" id="qsend" style="margin-top:4px;padding:18px 32px;font-size:18px">${inv?"Email my proposal & quote":"Receive instant quote"}</button>
       </div>
@@ -896,6 +897,7 @@ function renderRoute(){
 async function submitQuote(){
   const email=(document.getElementById("qemail")?.value||"").trim();
   const name=(document.getElementById("qname")?.value||"").trim();
+  const company=(document.getElementById("qcompany")?.value||"").trim();
   const msg=document.getElementById("qmsg");
   if(!/.+@.+\..+/.test(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please enter a valid work email.";} return; }
   if(emailBlocked(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please use your work email address.";} return; }
@@ -904,7 +906,7 @@ async function submitQuote(){
   const venueName = state.venue==="own"?"Own venue":state.venue==="plus"?"Venue+":state.venue==="more"?"More options (quote)":"";
   const venueStr = state.setting + (state.setting==="indoor"&&venueName?" · "+venueName:"") + (state.setting==="outdoor"&&state.location?" · "+(state.location==="custom"?"Custom location":state.location):"");
   const payload={
-    email, name,
+    email, name, company,
     activities: state.activities.map(id=>{const a=ACTIVITIES.find(x=>x.id===id);return a?a.name:null;}).filter(Boolean),
     type: state.purpose||"Team Building for Fun",
     pax: state.headcount,
@@ -923,7 +925,7 @@ async function submitQuote(){
   try{
     const r=await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     const data=await r.json();
-    if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF.";} }
+    if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF.";} if(btn){btn.textContent="✓ Sent";} }
     else { if(msg){msg.style.color="var(--quote)";msg.textContent="Hmm, that didn't send: "+(data.error||"please try again.");} if(btn){btn.disabled=false; btn.textContent="Receive instant quote";} }
   }catch(e){
     if(msg){msg.style.color="var(--quote)";msg.textContent="Network error. Please try again.";}
