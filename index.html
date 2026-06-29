@@ -425,7 +425,7 @@ function renderPanel(){
     const list = (rows.length>1||tbc.length)
       ? `<div class="plist">${priceRowsHtml()}${tbcHtml}</div>`
       : `<div class="lbl">${rows[0][0]}</div>`;
-    const cap = estimate ? `<div class="lbl" style="margin-top:6px">Indicative — final quote on confirmation</div>` : "";
+    const cap = estimate ? `<div class="lbl" style="margin-top:6px">Indicative · final quote on confirmation</div>` : "";
     const head = estimate
       ? `<div class="lbl" style="margin-bottom:-2px">From</div><div class="amt">${money(priceTotal())}</div>`
       : `<div class="amt">${money(priceTotal())}</div>`;
@@ -865,12 +865,12 @@ function renderRoute(){
     $("#stage").innerHTML=`<div class="card outcome">
       <div class="ic" style="background:var(--buy-soft);color:var(--buy)">${icon('card')}</div>
       <h1>You're ready to book</h1>
-      <p class="sub">Everything fits the self-serve box, book &amp; pay online now. Zero sales involvement.</p>
+      <p class="sub">You're all set, with facilitator and setup included. Book and pay online to confirm your date instantly, or have your full proposal and quote emailed as a PDF to share or get sign-off first.</p>
       ${ecards}
       <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl" style="margin-top:8px">${state.duration==="full"?"Full day":"Half day"}${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
         <button class="btn" onclick="state.invoice=true;renderStep()" style="flex:1;min-width:210px;padding:16px">Instant proposal &amp; quote</button>
-        <button class="btn primary" onclick="alert('Online card payment is coming soon — for now, tap “Instant proposal & quote”.')" style="flex:1;min-width:210px;padding:16px">Pay ${money(total)} &amp; confirm booking</button>
+        <button class="btn primary" onclick="alert('Online card payment is coming soon. For now, tap “Instant proposal & quote”.')" style="flex:1;min-width:210px;padding:16px">Pay ${money(total)} &amp; confirm booking</button>
       </div>
       <div style="text-align:left;margin-top:18px"><button class="btn" onclick="prev()">← Back</button></div>
     </div>`;
@@ -878,7 +878,7 @@ function renderRoute(){
     $("#stage").innerHTML=`<div class="card outcome">
       <div class="ic" style="background:var(--quote-soft);color:var(--quote)">${icon('doc')}</div>
       <h1>${inv?"Your instant proposal & quote":"Let's tailor this for you"}</h1>
-      <p class="sub">${inv?"Pop in your details and we'll email your full proposal and quote as a PDF — book online when you're ready, or pay by PayNow or bank transfer.":"Pop in your email and we'll send your proposal and quote as a PDF in seconds. "+(pax>=VOL?"For a group this size we'll confirm volume pricing and tailor the logistics with you.":big?"For groups over "+CAP+" pax we'll confirm pricing and tailor the logistics with you.":"A couple of your choices just need us to confirm pricing, so you'll have the final numbers fast.")}</p>
+      <p class="sub">${inv?"Pop in your details and we'll email your full proposal and quote as a PDF. Book online when you're ready, or pay by PayNow or bank transfer.":"Pop in your email and we'll send your proposal and quote as a PDF in seconds. "+(pax>=VOL?"For a group this size we'll confirm volume pricing and tailor the logistics with you.":big?"For groups over "+CAP+" pax we'll confirm pricing and tailor the logistics with you.":"A couple of your choices just need us to confirm pricing, so you'll have the final numbers fast.")}</p>
       ${ecards}
       <div style="max-width:380px;margin:26px auto 0;display:flex;flex-direction:column;gap:16px">
         <div class="field" style="margin:0"><input type="text" id="qname" placeholder="Name"></div>
@@ -922,7 +922,7 @@ async function submitQuote(){
     if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF.";} }
     else { if(msg){msg.style.color="var(--quote)";msg.textContent="Hmm, that didn't send: "+(data.error||"please try again.");} if(btn){btn.disabled=false; btn.textContent="Receive instant quote";} }
   }catch(e){
-    if(msg){msg.style.color="var(--quote)";msg.textContent="Network error — please try again.";}
+    if(msg){msg.style.color="var(--quote)";msg.textContent="Network error. Please try again.";}
     if(btn){btn.disabled=false; btn.textContent="Receive instant quote";}
   }
 }
