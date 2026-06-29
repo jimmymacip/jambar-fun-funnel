@@ -406,7 +406,7 @@ function renderPanel(){
   const add=(k,v)=>{if(v)rows+=`<div class="srow"><span class="k">${k}</span><span class="v">${v}</span></div>`;};
   add("Type", state.purpose);
   add("Facilitator", state.purpose?"Included":"");
-  add("Group size", pax+" pax");
+  if(stepIdx>=1) add("Group size", pax+" pax");
   add("Date", dateLabel());
   add("Duration", state.duration==="full"?"Full day":(state.daypart?"Half day · "+state.daypart.toUpperCase():""));
   add("Setting", state.setting?state.setting.replace("-"," · "):"");
@@ -435,7 +435,7 @@ function renderPanel(){
   let flagBlock = fl.length ? `<div class="flags">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>` : "";
   let routeBlock = stepIdx>0 ? `<div class="route ${isBuyNow()&&!big?"buy":"quote"}">${isBuyNow()&&!big?"➜ ON TRACK FOR BUY NOW":"➜ ROUTES TO QUOTE"}</div>` : "";
 
-  $("#panel").innerHTML=`<h3>Your event</h3>${rows||'<div class="srow"><span class="k">Nothing selected yet</span></div>'}${stepIdx>=1?priceBlock:""}${flagBlock}${routeBlock}`;
+  $("#panel").innerHTML=`<h3>Your event</h3>${rows||'<div class="srow"><span class="k" style="color:var(--ink-soft)">Your event details will appear here</span></div>'}${stepIdx>=1?priceBlock:""}${flagBlock}${routeBlock}`;
 }
 
 /* ---------------- step renderers ---------------- */
