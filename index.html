@@ -354,7 +354,7 @@ function priceRows(){const pax=state.headcount,pr=priceFor(pax),wc=waterCost(),v
 function priceTotal(){return priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();}
 function priceRowsHtml(){return priceRows().map(r=>`<div class="pl"><span>${r[0]}</span><span>${money(r[1])}</span></div>`).join("");}
 // Items that can't be priced without a human — shown as "quoted separately", not silently dropped.
-function tbcRows(){const t=[];if(state.setting==="indoor"&&state.venue==="more")t.push(["Venue","Quoted separately"]);if(state.setting==="outdoor"&&state.location==="custom")t.push(["Custom location","Quoted separately"]);if(state.combine)t.push(["Activity design","Quoted separately"]);return t;}
+function tbcRows(){const t=[];if(state.setting==="indoor"&&state.venue==="more")t.push(["Venue","Quoted separately"]);if(state.setting==="outdoor"&&state.location==="custom")t.push(["Custom location","Quoted separately"]);if(state.combine)t.push(["Activity design","Quoted separately"]);if(state.extras.includes("Catering / F&B"))t.push(["Catering / F&B","Quoted separately"]);if(state.extras.includes("Transport"))t.push(["Transport","Quoted separately"]);return t;}
 function venueLabel(){return state.venue==="own"?"Own venue":state.venue==="plus"?("Venue+ (+"+money(venueRate(state.duration))+")"):state.venue==="more"?"More options (quote)":"";}
 
 function activity(){return ACTIVITIES.find(a=>a.id===state.activities[0]);}
@@ -867,7 +867,7 @@ function renderRoute(){
       <h1>You're ready to book</h1>
       <p class="sub">You're all set, with facilitator and setup included. Book and pay online to confirm your date instantly, or have your full proposal and quote emailed as a PDF to share or get sign-off first.</p>
       ${ecards}
-      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div><div class="lbl" style="margin-top:8px">${state.duration==="full"?"Full day":"Half day"}${state.daypart?" ("+state.daypart.toUpperCase()+")":""} · facilitator included</div></div>
+      <div class="price" style="border-top:1px solid var(--line)"><div class="amt">${money(total)}</div></div>
       <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:18px">
         <button class="btn" onclick="state.invoice=true;renderStep()" style="flex:1;min-width:210px;padding:16px">Instant proposal &amp; quote</button>
         <button class="btn primary" onclick="alert('Online card payment is coming soon. For now, tap “Instant proposal & quote”.')" style="flex:1;min-width:210px;padding:16px">Pay ${money(total)} &amp; confirm booking</button>
@@ -904,7 +904,7 @@ async function submitQuote(){
   const payload={
     email, name,
     activities: state.activities.map(id=>{const a=ACTIVITIES.find(x=>x.id===id);return a?a.name:null;}).filter(Boolean),
-    type: "Team Building for "+(state.purpose||"Fun"),
+    type: state.purpose||"Team Building for Fun",
     pax: state.headcount,
     date: dateLabel()||"To confirm",
     setting: state.setting + (state.setting==="indoor"?" · "+venueLabel():""),
