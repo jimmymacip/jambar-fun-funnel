@@ -350,7 +350,7 @@ function venueWeekend(){if(!state.date)return false;const d=new Date(state.date+
 function venueRate(dur){const wk=venueWeekend();return dur==="full"?(wk?1650:1235):(wk?975:875);} // brochure V1.2 nett rates
 function venueCost(){return (state.setting==="indoor"&&state.venue==="plus")?venueRate(state.duration):0;}
 function weekendFee(){if(!state.date)return 0;const d=new Date(state.date+"T00:00").getDay();return (d===0||d===6)?WEEKEND:0;}
-function priceRows(){const pax=state.headcount,pr=priceFor(pax),wc=waterCost(),vc=venueCost(),wf=weekendFee();const rows=[[(pr===MIN?"Minimum spend (under ~"+Math.ceil(MIN/RATE)+" pax)":"S$"+RATE+"/pax × "+pax+" pax"),pr]];if(wf)rows.push(["Weekend fee",wf]);if(wc)rows.push(["Water (S$3/pax)",wc]);if(vc)rows.push(["Venue+ · "+(state.duration==="full"?"Full day":"Half day")+(venueWeekend()?" · Fri–Sun":""),vc]);return rows;}
+function priceRows(){const pax=state.headcount,pr=priceFor(pax),wc=waterCost(),vc=venueCost(),wf=weekendFee();const rows=[[(pr===MIN?"Flat rate · up to ~"+Math.ceil(MIN/RATE)+" pax":"S$"+RATE+"/pax × "+pax+" pax"),pr]];if(wf)rows.push(["Weekend fee",wf]);if(wc)rows.push(["Water (S$3/pax)",wc]);if(vc)rows.push(["Venue+ · "+(state.duration==="full"?"Full day":"Half day")+(venueWeekend()?" · Fri–Sun":""),vc]);return rows;}
 function priceTotal(){return priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();}
 function priceRowsHtml(){return priceRows().map(r=>`<div class="pl"><span>${r[0]}</span><span>${money(r[1])}</span></div>`).join("");}
 // Items that can't be priced without a human — shown as "quoted separately", not silently dropped.
@@ -405,10 +405,10 @@ function renderPanel(){
   let rows="";
   const add=(k,v)=>{if(v)rows+=`<div class="srow"><span class="k">${k}</span><span class="v">${v}</span></div>`;};
   add("Type", state.purpose);
+  add("Facilitator", state.purpose?"Included":"");
   add("Group size", pax+" pax");
   add("Date", dateLabel());
   add("Duration", state.duration==="full"?"Full day":(state.daypart?"Half day · "+state.daypart.toUpperCase():""));
-  add("Facilitator", (state.duration==="full"||state.daypart)?"Included":"");
   add("Setting", state.setting?state.setting.replace("-"," · "):"");
   if(state.setting==="indoor") add("Venue", venueLabel());
   if(state.setting==="outdoor"&&state.location) add("Location", state.location==="custom"?"Custom (quote)":state.location);
@@ -435,7 +435,7 @@ function renderPanel(){
   let flagBlock = fl.length ? `<div class="flags">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>` : "";
   let routeBlock = stepIdx>0 ? `<div class="route ${isBuyNow()&&!big?"buy":"quote"}">${isBuyNow()&&!big?"➜ ON TRACK FOR BUY NOW":"➜ ROUTES TO QUOTE"}</div>` : "";
 
-  $("#panel").innerHTML=`<h3>Your event</h3>${rows||'<div class="srow"><span class="k">Nothing selected yet</span></div>'}${priceBlock}${flagBlock}${routeBlock}`;
+  $("#panel").innerHTML=`<h3>Your event</h3>${rows||'<div class="srow"><span class="k">Nothing selected yet</span></div>'}${stepIdx>=1?priceBlock:""}${flagBlock}${routeBlock}`;
 }
 
 /* ---------------- step renderers ---------------- */
@@ -878,9 +878,8 @@ function renderRoute(){
     $("#stage").innerHTML=`<div class="card outcome">
       <div class="ic" style="background:var(--quote-soft);color:var(--quote)">${icon('doc')}</div>
       <h1>${inv?"Your instant proposal & quote":"Let's tailor this for you"}</h1>
-      <p class="sub">${inv?"Pop in your details and we'll email your full proposal and quote as a PDF — book online when you're ready, or pay by PayNow or bank transfer.":(pax>=VOL?"For large events we tailor logistics and apply volume pricing.":big?"For groups over "+CAP+" pax we tailor the logistics.":"A couple of your choices need a human touch.")+" Send it over and we'll confirm fast, most of the work's already done."}</p>
+      <p class="sub">${inv?"Pop in your details and we'll email your full proposal and quote as a PDF — book online when you're ready, or pay by PayNow or bank transfer.":"Pop in your email and we'll send your proposal and quote as a PDF in seconds. "+(pax>=VOL?"For a group this size we'll confirm volume pricing and tailor the logistics with you.":big?"For groups over "+CAP+" pax we'll confirm pricing and tailor the logistics with you.":"A couple of your choices just need us to confirm pricing, so you'll have the final numbers fast.")}</p>
       ${ecards}
-      ${inv?"":`<div class="flags" style="max-width:420px;margin:22px auto 6px">${fl.map(f=>`<span class="flagchip">⚑ ${f}</span>`).join("")}</div>`}
       <div style="max-width:380px;margin:26px auto 0;display:flex;flex-direction:column;gap:16px">
         <div class="field" style="margin:0"><input type="text" id="qname" placeholder="Name"></div>
         <div class="field" style="margin:0"><input type="email" id="qemail" placeholder="Work email"></div>
