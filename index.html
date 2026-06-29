@@ -901,16 +901,20 @@ async function submitQuote(){
   if(emailBlocked(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please use your work email address.";} return; }
   const total=priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();
   const isEstimate = !(isBuyNow()&&state.headcount<=CAP);
+  const venueName = state.venue==="own"?"Own venue":state.venue==="plus"?"Venue+":state.venue==="more"?"More options (quote)":"";
+  const venueStr = state.setting + (state.setting==="indoor"&&venueName?" · "+venueName:"") + (state.setting==="outdoor"&&state.location?" · "+(state.location==="custom"?"Custom location":state.location):"");
   const payload={
     email, name,
     activities: state.activities.map(id=>{const a=ACTIVITIES.find(x=>x.id===id);return a?a.name:null;}).filter(Boolean),
     type: state.purpose||"Team Building for Fun",
     pax: state.headcount,
     date: dateLabel()||"To confirm",
-    setting: state.setting + (state.setting==="indoor"?" · "+venueLabel():""),
+    setting: venueStr,
     duration: (state.duration==="full"?"Full day":"Half day"+(state.daypart?" · "+state.daypart.toUpperCase():"")),
     price: (isEstimate?"From ":"")+money(total),
     priceNote: isEstimate?"Indicative estimate · final quote on confirmation":"Facilitator included",
+    lines: priceRows().map(r=>[r[0], money(r[1])]),
+    tbc: tbcRows(),
     venuePlus: state.venue==="plus"
   };
   const btn=document.getElementById("qsend");
