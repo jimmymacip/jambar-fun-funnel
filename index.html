@@ -938,7 +938,7 @@ async function submitQuote(){
   try{
     const r=await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     const data=await r.json();
-    if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF."+(isEstimate?`<a href="${BOOKING_URL}" target="_blank" rel="noopener" style="display:block;max-width:300px;margin:14px auto 0;background:var(--primary);color:#fff;padding:13px 18px;border-radius:10px;font-weight:700;text-decoration:none">📅 Book a quick call to lock it in →</a>`:"");} if(btn){btn.textContent="✓ Sent";} }
+    if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF."+(isEstimate?`<a href="${BOOKING_URL}" target="_blank" rel="noopener" style="display:block;width:100%;box-sizing:border-box;margin:14px 0 0;background:var(--primary);color:#fff;padding:18px 32px;border-radius:11px;font-weight:700;font-size:18px;text-align:center;text-decoration:none">📅 Book a quick call to lock it in →</a>`:"");} if(btn){btn.textContent="✓ Sent";} }
     else { if(msg){msg.style.color="var(--quote)";msg.textContent="Hmm, that didn't send: "+(data.error||"please try again.");} if(btn){btn.disabled=false; btn.textContent="Receive instant quote";} }
   }catch(e){
     if(msg){msg.style.color="var(--quote)";msg.textContent="Network error. Please try again.";}
