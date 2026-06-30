@@ -808,14 +808,10 @@ function renderNurture(){
       <button class="btn primary" id="nsend" style="margin-top:12px">Send me the guide →</button>
       <p class="hint" style="max-width:360px;margin:12px auto 0">We'll email your guide and the occasional helpful nudge. Unsubscribe anytime.</p>
     </div>
-    <div id="nbody" style="display:none">
-      <div class="nhero">
-        <div><h2>${warm?`Your guide for ${month}`:`Your team fun price guide`}</h2><p>${heroSub}</p></div>
-        <div class="npbox">${pax>=VOL?`<div class="lbl">Pricing</div><div class="amt" style="font-size:22px">Volume pricing</div><div class="fn">tailored for 100+ groups</div>`:`<div class="lbl">From</div><div class="amt">${money(pr)}</div><div class="fn">${fine}</div>`}</div>
-      </div>
-      <h2 style="font-family:var(--font-head);margin:24px 2px 4px;font-size:19px">The six our teams love most</h2>
-      <p class="sub" style="margin:0 2px 16px">A mix of indoor and outdoor, all run by a Jambar facilitator. Every one works for your group size.</p>
-      <div class="ngrid">${cards}</div>
+    <div id="ndone" style="display:none;text-align:center">
+      <div class="ic" style="background:var(--buy-soft);color:#16a34a">${icon('doc')}</div>
+      <h1>Your guide is on the way</h1>
+      <p class="sub">We've emailed pricing for ${who} and the six activities groups love most. Give it a minute, and check spam just in case.</p>
       <div class="ncta">
         <h2>${ctaHead}</h2><p>${ctaText}</p>
         <button class="btn buy" id="ncta">${ctaBtn}</button>
@@ -828,11 +824,19 @@ function renderNurture(){
     const e=($("#nemail").value||"").trim();
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){alert("Please enter a valid email so we can send your guide.");return;}
     if(emailBlocked(e)){alert("Please use your work email address.");return;}
-    $("#ngate").style.display="none";
-    $("#nbody").style.display="block";
-    window.scrollTo({top:0,behavior:"smooth"});
+    const btn=$("#nsend"); if(btn){btn.disabled=true;btn.textContent="Sending…";}
     const guidePrice = pax>=VOL ? "we'll tailor volume pricing" : ("pricing starts from "+money(pr));
-    try{ await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"guide",email:e,pax,guidePrice})}); }catch(_){}
+    try{
+      const r=await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"guide",email:e,pax,guidePrice})});
+      if(!r.ok){const d=await r.json().catch(()=>({}));throw new Error(d.error||"send failed");}
+    }catch(err){
+      if(btn){btn.disabled=false;btn.textContent="Send me the guide →";}
+      alert(/work email/i.test(err.message)?"Please use your work email address.":"Sorry, something went wrong sending your guide. Please try again.");
+      return;
+    }
+    $("#ngate").style.display="none";
+    $("#ndone").style.display="block";
+    window.scrollTo({top:0,behavior:"smooth"});
   };
   $("#nsend").onclick=send;
   $("#nemail").addEventListener("keydown",ev=>{if(ev.key==="Enter")send();});
