@@ -811,7 +811,7 @@ function renderNurture(){
     <div id="nbody" style="display:none">
       <div class="nhero">
         <div><h2>${warm?`Your guide for ${month}`:`Your team fun price guide`}</h2><p>${heroSub}</p></div>
-        <div class="npbox"><div class="lbl">From</div><div class="amt">${money(pr)}</div><div class="fn">${fine}</div></div>
+        <div class="npbox">${pax>=VOL?`<div class="lbl">Pricing</div><div class="amt" style="font-size:22px">Volume pricing</div><div class="fn">tailored for 100+ groups</div>`:`<div class="lbl">From</div><div class="amt">${money(pr)}</div><div class="fn">${fine}</div>`}</div>
       </div>
       <h2 style="font-family:var(--font-head);margin:24px 2px 4px;font-size:19px">The six our teams love most</h2>
       <p class="sub" style="margin:0 2px 16px">A mix of indoor and outdoor, all run by a Jambar facilitator. Every one works for your group size.</p>
@@ -824,12 +824,15 @@ function renderNurture(){
     <button class="btn" style="margin-top:16px" id="nback">← Back</button>
   </div>`;
 
-  const send=()=>{
+  const send=async()=>{
     const e=($("#nemail").value||"").trim();
     if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)){alert("Please enter a valid email so we can send your guide.");return;}
+    if(emailBlocked(e)){alert("Please use your work email address.");return;}
     $("#ngate").style.display="none";
     $("#nbody").style.display="block";
     window.scrollTo({top:0,behavior:"smooth"});
+    const guidePrice = pax>=VOL ? "we'll tailor volume pricing" : ("pricing starts from "+money(pr));
+    try{ await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:"guide",email:e,pax,guidePrice})}); }catch(_){}
   };
   $("#nsend").onclick=send;
   $("#nemail").addEventListener("keydown",ev=>{if(ev.key==="Enter")send();});
@@ -907,6 +910,7 @@ async function submitQuote(){
   if(emailBlocked(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please use your work email address.";} return; }
   const total=priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();
   const isEstimate = !(isBuyNow()&&state.headcount<=CAP);
+  const volume = state.headcount>=VOL;
   const venueName = state.venue==="own"?"Own venue":state.venue==="plus"?"Venue+":state.venue==="more"?"More options (quote)":"";
   const venueStr = state.setting + (state.setting==="indoor"&&venueName?" · "+venueName:"") + (state.setting==="outdoor"&&state.location?" · "+(state.location==="custom"?"Custom location":state.location):"");
   const payload={
@@ -917,10 +921,11 @@ async function submitQuote(){
     date: dateLabel()||"To confirm",
     setting: venueStr,
     duration: (state.duration==="full"?"Full day":"Half day"+(state.daypart?" · "+state.daypart.toUpperCase():"")),
-    price: (isEstimate?"From ":"")+money(total),
-    priceNote: isEstimate?"Indicative estimate · final quote on confirmation":"Facilitator included",
-    lines: priceRows().map(r=>[r[0], money(r[1])]),
-    tbc: tbcRows(),
+    price: volume?"":(isEstimate?"From ":"")+money(total),
+    priceNote: volume?"Volume pricing · tailored for your group":(isEstimate?"Indicative estimate · final quote on confirmation":"Facilitator included"),
+    lines: volume?[]:priceRows().map(r=>[r[0], money(r[1])]),
+    tbc: volume?[]:tbcRows(),
+    volume,
     venuePlus: state.venue==="plus"
   };
   const btn=document.getElementById("qsend");
