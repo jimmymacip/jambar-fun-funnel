@@ -308,8 +308,9 @@ const ACTIVITIES=[
  {id:46,name:"Hawker Food Heroes",set:"outdoor",q:false,loc:["Marina Bay","Chinatown"],img:"",url:"https://jambarteambuilding.com/",desc:"A thrilling exploration of Singapore's hawker culture, finding, sampling and racing between local food spots."}
 ];
 
-const RATE=55, MIN=1200, CAP=50, VOL=100, WATER=3, VENUE=750, WEEKEND=600;
+const RATE=55, MIN=1200, CAP=100, VOL=101, WATER=3, VENUE=750, WEEKEND=600;
 const QUOTE_API_URL="https://jambar-quote-api-24jc.vercel.app/api/quote";
+const BOOKING_URL="https://outlook.office.com/book/Jambar2@jambarteambuilding.com/?ismsaljsauthenabled";
 // Work-email gate (mirrors the server check; server is authoritative).
 const BLOCKED_EMAIL_DOMAINS=new Set(["gmail.com","googlemail.com","yahoo.com","yahoo.com.sg","yahoo.co.uk","ymail.com","rocketmail.com","hotmail.com","hotmail.co.uk","hotmail.sg","outlook.com","outlook.sg","live.com","live.com.sg","msn.com","icloud.com","me.com","mac.com","aol.com","proton.me","protonmail.com","gmx.com","mail.com","zoho.com","yandex.com","qq.com","163.com","126.com","sina.com","getout.sg","funempire.com","thefunempire.com","ekateambuilding.com","strengthsschool.com","adventour.sg","griness.com","teambuilding.com.sg","actfa.com","amazement.com.sg","thegroovygrub.com","cohesion.sg","kafnu.sg"]);
 function emailBlocked(e){return BLOCKED_EMAIL_DOMAINS.has((e.split("@")[1]||"").toLowerCase());}
@@ -375,7 +376,7 @@ function dateLabel(){
 
 function flags(){
   const f=[];
-  if(state.headcount>CAP) f.push(state.headcount>=VOL?"Large event · volume pricing":"Large group (31+ pax)");
+  if(state.headcount>CAP) f.push("Volume pricing · over 100 pax");
   if(state.rush) f.push("Rush event (under 1 week)");
   if(state.hold) f.push("Holding multiple dates");
   if(state.dateMode==="month") f.push("Month only, date to confirm");
@@ -471,9 +472,9 @@ function renderStep(){
     let banner;
     if(pax<=CAP) banner=`✓ Within self-serve range, you can book &amp; pay online.`;
     else if(pax<VOL) banner=`⚑ Over ${CAP} pax, we'll keep configuring then tailor a quote (no instant checkout for larger groups).`;
-    else banner=`⚑ Large event, volume pricing. We regularly run 500&ndash;1000 pax events, we'll tailor pricing and logistics for you.`;
+    else banner=`⚑ Big event — we run team days right up to 1,000+ pax. We'll tailor the pricing and logistics with you.`;
     const chips=[10,20,30,50,100,200];
-    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>How many people?</h1><p class="sub">Up to ${CAP} pax can book online instantly. Larger groups get a tailored quote, and big events get volume pricing.</p>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>How many people?</h1><p class="sub">Up to ${CAP} pax? Book online instantly. Bigger? Speak to us about volume pricing.</p>
     <div class="count">
       <button id="minus" aria-label="decrease">&minus;</button>
       <input id="paxInput" class="paxin" type="number" min="1" inputmode="numeric" value="${pax}">
@@ -859,7 +860,10 @@ function renderRoute(){
   const settingPic=state.venue==="plus"?"venue-plus.jpg":(state.setting==="outdoor"?"outdoor.jpg":"indoor.jpg");
   const settingCap=state.setting==="outdoor"?("Outdoor"+(state.location&&state.location!=="custom"?" · "+state.location:"")):("Indoor"+(state.venue==="plus"?" · Venue+":""));
   const picCard=(src,cap)=>`<div style="flex:1 1 220px;min-width:190px"><div style="position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;background:var(--line)"><img src="${src}" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.closest('div').style.display='none'"><span style="position:absolute;left:10px;bottom:10px;background:rgba(15,23,42,.72);color:#fff;font-weight:700;font-size:13px;padding:5px 11px;border-radius:9px">${cap}</span></div></div>`;
-  const ecards=`<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:6px auto 2px;max-width:560px">${picCard(settingPic,settingCap)}${a&&a.img?picCard(a.img,a.name):""}</div>`;
+  // Show one card per chosen activity. 2 activities (full day) -> both activities; 1 -> setting + activity.
+  const actCards=state.activities.map(id=>{const x=ACTIVITIES.find(z=>z.id===id);return x&&x.img?picCard(x.img,x.name):"";}).filter(Boolean);
+  const cards=actCards.length>=2?actCards.slice(0,2):[picCard(settingPic,settingCap),...actCards];
+  const ecards=`<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center;margin:6px auto 2px;max-width:560px">${cards.join("")}</div>`;
 
   if(showBuy){
     $("#stage").innerHTML=`<div class="card outcome">
@@ -925,7 +929,7 @@ async function submitQuote(){
   try{
     const r=await fetch(QUOTE_API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
     const data=await r.json();
-    if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF.";} if(btn){btn.textContent="✓ Sent";} }
+    if(data.ok){ if(msg){msg.style.color="var(--buy)";msg.innerHTML="<b>✓ Sent!</b> Check your inbox for your quote PDF."+(isEstimate?`<a href="${BOOKING_URL}" target="_blank" rel="noopener" style="display:block;max-width:300px;margin:14px auto 0;background:var(--primary);color:#fff;padding:13px 18px;border-radius:10px;font-weight:700;text-decoration:none">📅 Book a quick call to lock it in →</a>`:"");} if(btn){btn.textContent="✓ Sent";} }
     else { if(msg){msg.style.color="var(--quote)";msg.textContent="Hmm, that didn't send: "+(data.error||"please try again.");} if(btn){btn.disabled=false; btn.textContent="Receive instant quote";} }
   }catch(e){
     if(msg){msg.style.color="var(--quote)";msg.textContent="Network error. Please try again.";}
