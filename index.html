@@ -270,7 +270,7 @@ const ACTIVITIES=[
  {id:2,name:"AI Murder Mystery",set:"indoor",q:true,loved:true,new2026:true,img:`${IMG}/2026/04/AI-Murder-Mystery-300x300.jpg`,url:`${SITE}/ai-murder-mystery-team-building-activity/`,desc:"A bespoke, interactive murder investigation powered by AI and built around your company culture."},
  {id:3,name:"The 'More Than Meets the AI' Challenge",set:"indoor",q:false,img:`${IMG}/2026/02/The-AI-Collaboration-Challenge-300x300.jpg`,url:`${SITE}/ai-team-building-activity/`,desc:"A high-energy workshop that turns AI from a distant technology into an everyday thinking partner."},
  {id:4,name:"Starbound",set:"indoor",q:false,loved:true,new2026:true,img:`${IMG}/2026/04/Space-Command-Featured-Image-300x300.jpg`,url:`${SITE}/space-command-team-building-activity/`,desc:"A fast-paced simulation where teams become a starship command crew making high-stakes decisions in real time."},
- {id:6,name:"Dome-Ination Trail Challenge",set:"outdoor",q:false,loc:["Gardens by the Bay"],img:`${IMG}/2025/06/Dome-ination-Trail-Challenge-Activity-Image-300x300.jpg`,url:`${SITE}/dome-ination-challenge/`,desc:"Gardens by the Bay becomes an adventure playground in an epic quest for discovery."},
+ {id:6,name:"Dome-Ination Trail Challenge",set:"outdoor",q:false,entry:40,entryLabel:"Gardens by the Bay dome entry",loc:["Gardens by the Bay"],img:`${IMG}/2025/06/Dome-ination-Trail-Challenge-Activity-Image-300x300.jpg`,url:`${SITE}/dome-ination-challenge/`,desc:"Gardens by the Bay becomes an adventure playground in an epic quest for discovery."},
  {id:8,name:"Shark Tank",set:"indoor",q:false,img:`${IMG}/2024/01/Screenshot-2024-01-02-7.49.55-AM.png`,url:`${SITE}/shark-tank/`,desc:"An idea-generation and innovation workshop using the exciting Shark Tank format as inspiration."},
  {id:9,name:"Art Jamming",set:"indoor",q:true,img:`${IMG}/2021/02/2019-11-25-Jumbar-Team-Building-80-300x300.jpg`,url:`${SITE}/art-jamming/`,desc:"An art-jamming activity where each team's canvas combines into one big collective masterpiece."},
  {id:10,name:"Graffiti Art",set:"indoor",q:true,img:`${IMG}/2021/02/DzaaXDyU8AEUw2P-300x300.jpeg`,url:`${SITE}/graffiti-art/`,desc:"Create a unique graffiti masterpiece inspired by your company values, mission or conference theme."},
@@ -360,6 +360,8 @@ function activitySubtotal(){
   const per = state.duration==="full" ? RATE*1.5 : RATE;
   return Math.max(MIN, Math.round(pax*per));
 }
+// Per-pax entry/ticket fees carried by specific activities (e.g. Dome-Ination = Gardens by the Bay dome entry).
+function entryCost(){const pax=state.headcount;return selActs().reduce((s,a)=>s+(a.entry?a.entry*pax:0),0);}
 function priceRows(){const pax=state.headcount,wc=waterCost(),vc=venueCost(),wf=weekendFee();const rows=[];
   if(state.duration==="full"){
     const main=pax*RATE, second=Math.round(pax*RATE*0.5);
@@ -368,8 +370,9 @@ function priceRows(){const pax=state.headcount,wc=waterCost(),vc=venueCost(),wf=
   } else {
     const pr=priceFor(pax);rows.push([(pr===MIN?"Flat rate · up to ~"+Math.ceil(MIN/RATE)+" pax":"S$"+RATE+"/pax × "+pax+" pax"),pr]);
   }
+  selActs().forEach(a=>{if(a.entry)rows.push([(a.entryLabel||a.name+" entry")+" · S$"+a.entry+"/pax × "+pax+" pax",a.entry*pax]);});
   if(wf)rows.push(["Weekend fee",wf]);if(wc)rows.push(["Water (S$3/pax)",wc]);if(vc)rows.push(["Venue+ · "+(state.duration==="full"?"Full day":"Half day")+(venueWeekend()?" · Fri–Sun":""),vc]);return rows;}
-function priceTotal(){return activitySubtotal()+waterCost()+venueCost()+weekendFee();}
+function priceTotal(){return activitySubtotal()+entryCost()+waterCost()+venueCost()+weekendFee();}
 function priceRowsHtml(){return priceRows().map(r=>`<div class="pl"><span>${r[0]}</span><span>${money(r[1])}</span></div>`).join("");}
 // Items that can't be priced without a human — shown as "quoted separately", not silently dropped.
 function tbcRows(){const t=[];if(state.setting==="indoor"&&state.venue==="more")t.push(["Venue","Quoted separately"]);if(state.setting==="outdoor"&&state.location==="custom")t.push(["Custom location","Quoted separately"]);if(state.combine)t.push(["Activity design","Quoted separately"]);if(state.extras.includes("Catering / F&B"))t.push(["Catering / F&B","Quoted separately"]);if(state.extras.includes("Transport"))t.push(["Transport","Quoted separately"]);return t;}
