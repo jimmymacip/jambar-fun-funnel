@@ -351,8 +351,24 @@ function venueWeekend(){if(!state.date)return false;const d=new Date(state.date+
 function venueRate(dur){const wk=venueWeekend();return dur==="full"?(wk?1650:1235):(wk?975:875);} // brochure V1.2 nett rates
 function venueCost(){return (state.setting==="indoor"&&state.venue==="plus")?venueRate(state.duration):0;}
 function weekendFee(){if(!state.date)return 0;const d=new Date(state.date+"T00:00").getDay();return (d===0||d===6)?WEEKEND:0;}
-function priceRows(){const pax=state.headcount,pr=priceFor(pax),wc=waterCost(),vc=venueCost(),wf=weekendFee();const rows=[[(pr===MIN?"Flat rate · up to ~"+Math.ceil(MIN/RATE)+" pax":"S$"+RATE+"/pax × "+pax+" pax"),pr]];if(wf)rows.push(["Weekend fee",wf]);if(wc)rows.push(["Water (S$3/pax)",wc]);if(vc)rows.push(["Venue+ · "+(state.duration==="full"?"Full day":"Half day")+(venueWeekend()?" · Fri–Sun":""),vc]);return rows;}
-function priceTotal(){return priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();}
+// Activity fee is driven by DURATION, not by how many activities are shortlisted.
+// Half day runs ONE main activity = RATE×pax. Full day runs TWO = RATE + RATE×0.5, ×pax. Floored at MIN.
+// Shortlisted extra options never change the price — the customer still only runs one (half) or two (full).
+function activitySubtotal(){
+  const pax=state.headcount;
+  const per = state.duration==="full" ? RATE*1.5 : RATE;
+  return Math.max(MIN, Math.round(pax*per));
+}
+function priceRows(){const pax=state.headcount,wc=waterCost(),vc=venueCost(),wf=weekendFee();const rows=[];
+  if(state.duration==="full"){
+    const main=pax*RATE, second=Math.round(pax*RATE*0.5);
+    if(main+second<MIN){rows.push(["Full day · flat rate · up to ~"+Math.ceil(MIN/RATE)+" pax",MIN]);}
+    else{rows.push(["Main activity · S$"+RATE+"/pax × "+pax+" pax",main]);rows.push(["Second activity · half price · S$"+(RATE/2)+"/pax × "+pax+" pax",second]);}
+  } else {
+    const pr=priceFor(pax);rows.push([(pr===MIN?"Flat rate · up to ~"+Math.ceil(MIN/RATE)+" pax":"S$"+RATE+"/pax × "+pax+" pax"),pr]);
+  }
+  if(wf)rows.push(["Weekend fee",wf]);if(wc)rows.push(["Water (S$3/pax)",wc]);if(vc)rows.push(["Venue+ · "+(state.duration==="full"?"Full day":"Half day")+(venueWeekend()?" · Fri–Sun":""),vc]);return rows;}
+function priceTotal(){return activitySubtotal()+waterCost()+venueCost()+weekendFee();}
 function priceRowsHtml(){return priceRows().map(r=>`<div class="pl"><span>${r[0]}</span><span>${money(r[1])}</span></div>`).join("");}
 // Items that can't be priced without a human — shown as "quoted separately", not silently dropped.
 function tbcRows(){const t=[];if(state.setting==="indoor"&&state.venue==="more")t.push(["Venue","Quoted separately"]);if(state.setting==="outdoor"&&state.location==="custom")t.push(["Custom location","Quoted separately"]);if(state.combine)t.push(["Activity design","Quoted separately"]);if(state.extras.includes("Catering / F&B"))t.push(["Catering / F&B","Quoted separately"]);if(state.extras.includes("Transport"))t.push(["Transport","Quoted separately"]);return t;}
@@ -367,9 +383,10 @@ function dateLabel(){
   if(state.dateMode==="exploring") return "Just exploring";
   if(state.dateMode==="month") return state.month?("~"+state.month):"Rough month";
   if(state.dateMode==="specific"){
-    if(state.hold) return "Holding "+state.dates.filter(x=>x).length+" dates";
+    const u=[...new Set(state.dates.filter(x=>x))];
+    if(state.hold) return "Holding "+u.length+" date"+(u.length>1?"s":"");
     if(state.date) return fmt(state.date);
-    const n=state.dates.filter(x=>x).length; if(n) return n+" option"+(n>1?"s":"");
+    if(u.length) return u.length+" option"+(u.length>1?"s":"");
   }
   return "";
 }
@@ -413,7 +430,7 @@ function renderPanel(){
   add("Setting", state.setting?state.setting.replace("-"," · "):"");
   if(state.setting==="indoor") add("Venue", venueLabel());
   if(state.setting==="outdoor"&&state.location) add("Location", state.location==="custom"?"Custom (quote)":state.location);
-  add("Activity", actNames()||(state.combine?"Combining multiple":""));
+  add("Activity", actNames()?(actNames()+(state.activities.length>(state.duration==="full"?2:1)?" (you'll run "+(state.duration==="full"?"two":"one")+")":"")):(state.combine?"Combining multiple":""));
   add("Extras", state.extras.length?state.extras.join(", "):(stepIdx>=6?"None":""));
 
   let priceBlock;
@@ -518,10 +535,11 @@ function renderStep(){
       const inputs=state.dates.map((d,i)=>`<div class="field"><label>${i===0?"Date":"Option "+(i+1)}</label><input type="text" class="fpick" data-i="${i}" value="${d}" placeholder="Select a date"></div>`).join("");
       const addBtn=state.dates.length<3?`<button class="btn" id="addDate" style="padding:8px 14px;font-size:13px">+ Add another possible date</button>`:"";
       const filled=state.dates.filter(x=>x);
+      const uniq=[...new Set(filled)];
       let pick="";
-      if(filled.length>=2){
+      if(uniq.length>=2){
         pick=`<div style="margin-top:18px"><label style="font-weight:700;font-size:13.5px">All of these are open, how do you want to proceed?</label><div class="opts" style="margin-top:10px">
-          ${filled.map(d=>`<button class="opt${state.date===d&&!state.hold?" sel":""}" data-book="${d}"><span class="ic">${icon('calcheck')}</span><span class="otxt"><span class="ot">Book ${fmt(d)}</span><span class="od">Lock this date &amp; pay now</span></span></button>`).join("")}
+          ${uniq.map(d=>`<button class="opt${state.date===d&&!state.hold?" sel":""}" data-book="${d}"><span class="ic">${icon('calcheck')}</span><span class="otxt"><span class="ot">Book ${fmt(d)}</span><span class="od">Lock this date &amp; pay now</span></span></button>`).join("")}
           <button class="opt${state.hold?" sel":""}" data-hold="1"><span class="ic">${icon('pause')}</span><span class="otxt"><span class="ot">Hold all, have us confirm</span><span class="od">Not ready to commit, sales confirms one with you</span></span></button>
         </div></div>`;
         // mark selected book button
@@ -533,7 +551,7 @@ function renderStep(){
           flatpickr(inp,{minDate:minDate,dateFormat:"Y-m-d",altInput:true,altFormat:"j M Y",disableMobile:true,defaultDate:inp.value||null,
             onChange:(sel,str)=>{
               const i=+inp.dataset.i;state.dates[i]=str;
-              const fl=state.dates.filter(x=>x);
+              const fl=[...new Set(state.dates.filter(x=>x))];
               if(fl.length<=1){state.hold=false;state.date=fl[0]||"";}
               else if(state.date&&!fl.includes(state.date))state.date="";
               state.rush=false;renderStep();
@@ -594,9 +612,9 @@ function renderStep(){
   else if(s==="activity"){
     const list=filteredActivities();
     const full=state.duration==="full";
-    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>${full?"Pick your activities":"Pick your activity"}</h1>
-    <p class="sub">${full?"A full day fits up to two activities. Pick one or two and we'll tailor the day, then send a quote. Facilitator always included.":"Price stays the same whichever you choose, pick on fun, not cost. Facilitator always included."}</p>
-    <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span>${full?` · <b id="selcount">${state.activities.length}/2 selected</b>`:""}</div>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Pick your activities</h1>
+    <p class="sub">${full?"A full day runs two main activities — shortlist up to 5 and we'll finalise the two with you. Price is the same whichever you pick, so choose on fun. Facilitator always included.":"A half day runs one main activity — shortlist up to 3 and we'll help you choose the best fit. Price is the same whichever you pick, so choose on fun. Facilitator always included."}</p>
+    <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span> · <b id="selcount">${state.activities.length}/${full?5:3} selected</b></div>
     <div class="grid" id="grid"></div>
     <div id="locbody"></div>
     </div>`;
@@ -619,19 +637,21 @@ function renderStep(){
     addNav();
 
     function pickActivity(id){
-      if(full){const i=state.activities.indexOf(id);if(i>=0)state.activities.splice(i,1);else if(state.activities.length<2)state.activities.push(id);}
-      else {state.activities=[id];}
+      const cap=full?5:3;const i=state.activities.indexOf(id);
+      if(i>=0)state.activities.splice(i,1);else if(state.activities.length<cap)state.activities.push(id);
       state.combine=false; syncLocation();
       g.querySelectorAll(".act").forEach(d=>{const sd=state.activities.includes(+d.dataset.id);d.classList.toggle("sel",sd);const b=d.querySelector(".bdg.s");if(b)b.style.display=sd?"block":"none";});
-      const sc=$("#selcount");if(sc)sc.textContent=state.activities.length+"/2 selected";
+      const sc=$("#selcount");if(sc)sc.textContent=state.activities.length+"/"+cap+" selected";
       buildLocation();renderPanel();
       const f=$("#fwd");if(f)f.disabled=!canAdvance();
     }
 
     function buildLocation(){
       const lb=$("#locbody");if(!lb)return;
+      if(state.duration==="full"||state.setting!=="outdoor"){lb.innerHTML="";return;}
+      if(state.activities.length>1){lb.innerHTML=`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Where in Singapore</div><div class="lv">Depends on the activity you run — we'll confirm the location with you</div></div></div>`;return;}
       const a=activity();
-      if(state.duration==="full"||state.setting!=="outdoor"||!a||!a.loc){lb.innerHTML="";return;}
+      if(!a||!a.loc){lb.innerHTML="";return;}
       if(a.loc.length===1){lb.innerHTML=`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Where in Singapore</div><div class="lv">Held at ${a.loc[0]}</div></div></div>`;return;}
       const chips=a.loc.map(L=>`<div class="chip${state.location===L?" sel":""}" data-l="${L}">${L}</div>`).join("")+`<div class="chip${state.location==="custom"?" sel":""}" data-l="custom">Somewhere else (we'll quote)</div>`;
       lb.innerHTML=`<div style="margin-top:20px"><label class="seclabel">Where in Singapore?</label><div class="chips" style="margin-top:10px">${chips}</div></div>`;
@@ -650,8 +670,8 @@ function renderStep(){
     </div></div>`;
     st.innerHTML=html;
     const b=st.querySelectorAll(".opt");
-    b[0].onclick=()=>{state.duration="half";state.daypart="am";if(state.activities.length>1)state.activities=state.activities.slice(0,1);renderStep();};
-    b[1].onclick=()=>{state.duration="half";state.daypart="pm";if(state.activities.length>1)state.activities=state.activities.slice(0,1);renderStep();};
+    b[0].onclick=()=>{state.duration="half";state.daypart="am";if(state.activities.length>3)state.activities=state.activities.slice(0,3);renderStep();};
+    b[1].onclick=()=>{state.duration="half";state.daypart="pm";if(state.activities.length>3)state.activities=state.activities.slice(0,3);renderStep();};
     b[2].onclick=()=>{state.duration="full";state.daypart=null;state.combine=false;renderStep();};
     addNav();
   }
@@ -682,7 +702,7 @@ function renderStep(){
 
 function syncLocation(){
   const a=activity();
-  if(state.duration==="full"||state.setting!=="outdoor"||!a||!a.loc){state.location=null;return;}
+  if(state.duration==="full"||state.setting!=="outdoor"||state.activities.length>1||!a||!a.loc){state.location=null;return;}
   if(a.loc.length===1){state.location=a.loc[0];return;}
   if(state.location!=="custom"&&!a.loc.includes(state.location))state.location=null;
 }
@@ -715,7 +735,7 @@ function canAdvance(){
   if(s==="activity"){
     if(state.combine) return true;
     if(state.activities.length<1) return false;
-    if(state.duration!=="full"){const a=activity(); if(state.setting==="outdoor"&&a&&a.loc) return !!state.location;}
+    if(state.duration!=="full"){const a=activity(); if(state.activities.length===1&&state.setting==="outdoor"&&a&&a.loc) return !!state.location;}
     return true;
   }
   return true;
@@ -849,7 +869,7 @@ function renderNurture(){
 function renderRoute(){
   const a=activity(), pax=state.headcount, big=pax>CAP, fl=flags(), buy=isBuyNow()&&!big;
   const showBuy=buy&&!state.invoice, inv=buy&&state.invoice;
-  const total=priceFor(pax)+waterCost()+venueCost()+weekendFee();
+  const total=priceTotal();
   const summary=`<div class="summary-box">
     <div class="srow"><span class="k">Type</span><span class="v">${state.purpose}</span></div>
     <div class="srow"><span class="k">Group</span><span class="v">${pax} pax</span></div>
@@ -912,7 +932,7 @@ async function submitQuote(){
   const msg=document.getElementById("qmsg");
   if(!/.+@.+\..+/.test(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please enter a valid work email.";} return; }
   if(emailBlocked(email)){ if(msg){msg.style.color="var(--quote)";msg.textContent="Please use your work email address.";} return; }
-  const total=priceFor(state.headcount)+waterCost()+venueCost()+weekendFee();
+  const total=priceTotal();
   const isEstimate = !(isBuyNow()&&state.headcount<=CAP);
   const volume = state.headcount>=VOL;
   const venueName = state.venue==="own"?"Own venue":state.venue==="plus"?"Venue+":state.venue==="more"?"More options (quote)":"";
@@ -955,7 +975,7 @@ function openModal(id){
   const setLabel=a.set==="both"?"Indoor / Outdoor":a.set==="outdoor"?"Outdoor":"Indoor";
   $("#mTags").innerHTML=`<span class="mtag">${setLabel}</span>`+(a.q?`<span class="mtag q">⚑ Enquiry only</span>`:`<span class="mtag ok">✓ Bookable online</span>`);
   const link=$("#mLink"); link.href=a.url;
-  $("#mPick").onclick=()=>{const full=state.duration==="full";if(full){if(!state.activities.includes(id)&&state.activities.length<2)state.activities.push(id);}else{state.activities=[id];}state.combine=false;closeModal();renderStep();};
+  $("#mPick").onclick=()=>{const cap=state.duration==="full"?5:3;if(!state.activities.includes(id)&&state.activities.length<cap)state.activities.push(id);state.combine=false;closeModal();renderStep();};
   $("#modal").classList.add("show");
 }
 function closeModal(){$("#modal").classList.remove("show");}
