@@ -83,7 +83,7 @@
   .seclabel{font-family:var(--font-head);font-weight:800;font-size:22px;display:block;margin-bottom:6px}
 
   /* step 1 service cards (with photos) */
-  .svc{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:26px}
+  .svc{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px;margin-top:26px}
   @media(max-width:720px){.svc{grid-template-columns:1fr}}
   .svccard{display:flex;flex-direction:column;text-align:left;border:1.5px solid var(--line);border-radius:16px;overflow:hidden;cursor:pointer;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.04);transition:.15s;font:inherit;color:inherit;padding:0}
   .svccard:hover{transform:translateY(-3px);box-shadow:var(--shadow);border-color:var(--primary)}
@@ -166,6 +166,7 @@
   .modal-actions .btn{flex:1;min-width:140px;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
   .bdg.q{background:var(--flag-soft);color:var(--flag)}
   .bdg.s{background:rgba(0,0,0,.6);color:#fff}
+  .bdg.set{left:auto;right:7px;background:rgba(15,23,42,.72);color:#fff}
   .filterbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;font-size:13px;color:var(--ink-soft)}
   .combine{margin-top:16px;border:1.5px dashed var(--line);border-radius:12px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;background:#fff}
   .combine .ct{font-size:13.5px;color:var(--ink-soft)}
@@ -399,6 +400,7 @@ function flags(){
   if(state.dateMode==="month") f.push("Month only, date to confirm");
   if(state.location==="custom") f.push("Custom location");
   if(state.setting==="indoor"&&state.venue==="more") f.push("More venue options");
+  if(state.setting==="both") f.push("Open to indoor or outdoor");
   if(selActs().some(a=>a.q)) f.push("Premium / materials activity");
   if(state.combine) f.push("Combining multiple activities");
   const bespoke=state.extras.filter(e=>e!=="Water");
@@ -427,7 +429,7 @@ function renderPanel(){
   if(stepIdx>=1) add("Group size", pax+" pax");
   add("Date", dateLabel());
   add("Duration", state.duration==="full"?"Full day":(state.daypart?"Half day · "+state.daypart.toUpperCase():""));
-  add("Setting", state.setting?state.setting.replace("-"," · "):"");
+  add("Setting", state.setting==="both"?"Open to both":(state.setting?state.setting.replace("-"," · "):""));
   if(state.setting==="indoor") add("Venue", venueLabel());
   if(state.setting==="outdoor"&&state.location) add("Location", state.location==="custom"?"Custom (quote)":state.location);
   add("Activity", actNames()?(actNames()+(state.activities.length>(state.duration==="full"?2:1)?" (you'll run "+(state.duration==="full"?"two":"one")+")":"")):(state.combine?"Combining multiple":""));
@@ -578,16 +580,18 @@ function renderStep(){
   }
 
   else if(s==="setting"){
-    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Indoor or outdoor?</h1><p class="sub">This filters the activities you'll see next.</p>
+    html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Indoor, outdoor, or open to both?</h1><p class="sub">This shapes the activities you'll see next. Not sure yet? Open to both shows everything.</p>
     <div class="svc">
-      <button class="svccard${state.setting==="indoor"?" sel":""}"><span class="pic"><img src="indoor.jpg" alt="Indoor team building" referrerpolicy="no-referrer" onerror="this.remove()"></span><span class="body"><span class="ttl">Indoor</span><span class="od">Hotel function room, conference space or your office.</span></span></button>
-      <button class="svccard${state.setting==="outdoor"?" sel":""}"><span class="pic"><img src="outdoor.jpg" alt="Outdoor team building" referrerpolicy="no-referrer" onerror="this.remove()"></span><span class="body"><span class="ttl">Outdoor</span><span class="od">A park, the city or the beach. You'll pick the exact spot with your activity.</span></span></button>
+      <button class="svccard${state.setting==="indoor"?" sel":""}"><span class="pic"><img src="indoor.jpg" alt="Indoor team building" referrerpolicy="no-referrer" onerror="this.remove()"></span><span class="body"><span class="ttl">Prefer indoor</span><span class="od">Hotel function room, conference space or your office.</span></span></button>
+      <button class="svccard${state.setting==="outdoor"?" sel":""}"><span class="pic"><img src="outdoor.jpg" alt="Outdoor team building" referrerpolicy="no-referrer" onerror="this.remove()"></span><span class="body"><span class="ttl">Prefer outdoor</span><span class="od">A park, the city or the beach. You'll pick the exact spot with your activity.</span></span></button>
+      <button class="svccard${state.setting==="both"?" sel":""}"><span class="pic"><img src="outdoor.jpg" alt="Indoor and outdoor" referrerpolicy="no-referrer" onerror="this.remove()"></span><span class="body"><span class="ttl">Open to both</span><span class="od">Not fussed — see indoor and outdoor together. We'll confirm the venue or location with you.</span></span></button>
     </div>
     <div id="venuebody"></div></div>`;
     st.innerHTML=html;
     const b=st.querySelectorAll(".svccard");
     b[0].onclick=()=>{state.setting="indoor";state.location=null;clearActivityIfHidden();renderStep();};
     b[1].onclick=()=>{state.setting="outdoor";state.venue=null;state.location=null;clearActivityIfHidden();renderStep();};
+    b[2].onclick=()=>{state.setting="both";state.venue=null;state.location=null;clearActivityIfHidden();renderStep();};
     addNav();
     if(state.setting==="indoor")buildVenue();
 
@@ -614,7 +618,7 @@ function renderStep(){
     const full=state.duration==="full";
     html=`<div class="card"><p class="step-k">Step ${stepIdx+1} of 7</p><h1>Pick your activities</h1>
     <p class="sub">${full?"A full day runs two main activities — shortlist up to 5 and we'll finalise the two with you. Price is the same whichever you pick, so choose on fun. Facilitator always included.":"A half day runs one main activity — shortlist up to 3 and we'll help you choose the best fit. Price is the same whichever you pick, so choose on fun. Facilitator always included."}</p>
-    <div class="filterbar"><span>Showing ${list.length} ${state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor"} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span> · <b id="selcount">${state.activities.length}/${full?5:3} selected</b></div>
+    <div class="filterbar"><span>Showing ${list.length} ${state.setting==="both"?"indoor &amp; outdoor":(state.setting&&state.setting.startsWith("outdoor")?"outdoor":"indoor")} activities</span><span>· <span class="flagchip" style="display:inline">⚑ = enquiry only</span></span> · <b id="selcount">${state.activities.length}/${full?5:3} selected</b></div>
     <div class="grid" id="grid"></div>
     <div id="locbody"></div>
     </div>`;
@@ -627,6 +631,7 @@ function renderStep(){
       d.className="act"+(seld?" sel":"");
       d.innerHTML=`<div class="ph"><span class="fallback">${a.name}</span>${a.img?`<img src="${a.img}" alt="${a.name}" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:""}<button class="info" title="View details" aria-label="View details">i</button></div>
         ${a.q?'<span class="bdg q">⚑ Enquire</span>':''}
+        ${state.setting==="both"?`<span class="bdg set">${a.set==="outdoor"?"Outdoor":"Indoor"}</span>`:''}
         <span class="bdg s" style="display:${seld?'block':'none'}">✓ Selected</span>
         <div class="nm">${a.name}</div>`;
       d.onclick=()=>pickActivity(a.id);
@@ -648,7 +653,9 @@ function renderStep(){
 
     function buildLocation(){
       const lb=$("#locbody");if(!lb)return;
-      if(state.duration==="full"||state.setting!=="outdoor"){lb.innerHTML="";return;}
+      if(state.duration==="full"){lb.innerHTML="";return;}
+      if(state.setting==="both"){lb.innerHTML=state.activities.length>=1?`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Venue &amp; location</div><div class="lv">Indoor venue or outdoor location depends on the activity you run — we'll confirm it with you</div></div></div>`:"";return;}
+      if(state.setting!=="outdoor"){lb.innerHTML="";return;}
       if(state.activities.length>1){lb.innerHTML=`<div class="locbox"><span class="ic">${icon('pin')}</span><div><div class="lt">Where in Singapore</div><div class="lv">Depends on the activity you run — we'll confirm the location with you</div></div></div>`;return;}
       const a=activity();
       if(!a||!a.loc){lb.innerHTML="";return;}
@@ -712,7 +719,7 @@ function clearActivityIfHidden(){
 }
 function filteredActivities(){
   const visible=ACTIVITIES.filter(a=>!a.hidden);          // hidden = guide-only, never in the booking picker
-  if(!state.setting) return visible;
+  if(!state.setting||state.setting==="both") return visible;
   const out=state.setting.startsWith("outdoor");
   return visible.filter(a=>a.set==="both"||a.set===(out?"outdoor":"indoor"));
 }
@@ -874,7 +881,7 @@ function renderRoute(){
     <div class="srow"><span class="k">Type</span><span class="v">${state.purpose}</span></div>
     <div class="srow"><span class="k">Group</span><span class="v">${pax} pax</span></div>
     <div class="srow"><span class="k">Date</span><span class="v">${dateLabel()||"To confirm"}</span></div>
-    <div class="srow"><span class="k">Setting</span><span class="v">${state.setting.replace("-"," · ")}</span></div>
+    <div class="srow"><span class="k">Setting</span><span class="v">${state.setting==="both"?"Open to both":state.setting.replace("-"," · ")}</span></div>
     ${state.setting==="indoor"?`<div class="srow"><span class="k">Venue</span><span class="v">${venueLabel()}</span></div>`:""}
     <div class="srow"><span class="k">Activity</span><span class="v">${actNames()||(state.combine?"Combining multiple, to design":"-")}</span></div>
     ${state.setting==="outdoor"&&state.location?`<div class="srow"><span class="k">Location</span><span class="v">${state.location==="custom"?"Custom (quote)":state.location}</span></div>`:""}
@@ -885,7 +892,7 @@ function renderRoute(){
   // Two visual cards (setting + chosen activity) shown in the terminal instead of repeating the summary —
   // the live "YOUR EVENT" panel on the right already lists the details.
   const settingPic=state.venue==="plus"?"venue-plus.jpg":(state.setting==="outdoor"?"outdoor.jpg":"indoor.jpg");
-  const settingCap=state.setting==="outdoor"?("Outdoor"+(state.location&&state.location!=="custom"?" · "+state.location:"")):("Indoor"+(state.venue==="plus"?" · Venue+":""));
+  const settingCap=state.setting==="both"?"Indoor or outdoor":(state.setting==="outdoor"?("Outdoor"+(state.location&&state.location!=="custom"?" · "+state.location:"")):("Indoor"+(state.venue==="plus"?" · Venue+":"")));
   const picCard=(src,cap)=>`<div style="flex:1 1 220px;min-width:190px"><div style="position:relative;border-radius:16px;overflow:hidden;aspect-ratio:4/3;background:var(--line)"><img src="${src}" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;object-fit:cover;display:block" onerror="this.closest('div').style.display='none'"><span style="position:absolute;left:10px;bottom:10px;background:rgba(15,23,42,.72);color:#fff;font-weight:700;font-size:13px;padding:5px 11px;border-radius:9px">${cap}</span></div></div>`;
   // Show one card per chosen activity. 2 activities (full day) -> both activities; 1 -> setting + activity.
   const actCards=state.activities.map(id=>{const x=ACTIVITIES.find(z=>z.id===id);return x&&x.img?picCard(x.img,x.name):"";}).filter(Boolean);
@@ -936,7 +943,7 @@ async function submitQuote(){
   const isEstimate = !(isBuyNow()&&state.headcount<=CAP);
   const volume = state.headcount>=VOL;
   const venueName = state.venue==="own"?"Own venue":state.venue==="plus"?"Venue+":state.venue==="more"?"More options (quote)":"";
-  const venueStr = state.setting + (state.setting==="indoor"&&venueName?" · "+venueName:"") + (state.setting==="outdoor"&&state.location?" · "+(state.location==="custom"?"Custom location":state.location):"");
+  const venueStr = state.setting==="both" ? "Indoor or outdoor · to confirm" : (state.setting + (state.setting==="indoor"&&venueName?" · "+venueName:"") + (state.setting==="outdoor"&&state.location?" · "+(state.location==="custom"?"Custom location":state.location):""));
   const payload={
     email, name, company,
     activities: state.activities.map(id=>{const a=ACTIVITIES.find(x=>x.id===id);return a?a.name:null;}).filter(Boolean),
